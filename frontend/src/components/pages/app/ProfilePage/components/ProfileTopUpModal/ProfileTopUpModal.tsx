@@ -1,4 +1,4 @@
-// Нижняя модалка пополнения: три тарифа в горизонтальном скролле, по умолчанию видны 439 и 890 ₽.
+// Нижняя модалка пополнения: три тарифа в горизонтальном скролле, по умолчанию видны первые две карточки.
 
 import { Check, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type TransitionEvent } from 'react'
@@ -44,7 +44,7 @@ export function ProfileTopUpModal({ isOpen, onClose, checkoutError, onSelectPlan
     return () => window.cancelAnimationFrame(id)
   }, [isOpen])
 
-  /** Сбрасывает скролл в начало, чтобы по умолчанию были видны 439 и 890 ₽. */
+  /** Сбрасывает скролл в начало, чтобы по умолчанию были видны первые две карточки. */
   useEffect(() => {
     if (!isOpen || !sheetIn) return
     const el = scrollRef.current

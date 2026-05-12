@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../../../../auth/apiClient'
 import { setTokens } from '../../../../../auth/authStorage'
+import { invalidateCachedGet } from '../../../app/AppShell/appBootstrapCache'
 import { messageFromErrorResponse } from '../messageFromErrorResponse'
 import '../AuthPages.css'
 
@@ -39,6 +40,7 @@ function EmailRegisterPage() {
       }
       const data = loginRes.data as { access_token: string; refresh_token: string }
       setTokens(data.access_token, data.refresh_token)
+      invalidateCachedGet('/api/users/me')
       navigate('/app/library', { replace: true })
     } catch {
       setError('Сеть недоступна. Проверьте подключение.')

@@ -1,4 +1,6 @@
-# Проверка подписи HTTP-уведомлений ЮMoney (параметр sign, HMAC-SHA256 по документации сервиса).
+# Проверка подписи HTTP-уведомлений ЮMoney (параметр sign, HMAC-SHA256).
+# Спецификация: https://yoomoney.ru/docs/payment-buttons/using-api/notifications
+# (шаги: без sign, сортировка ключей A–Z, RFC 3986 для значений, HMAC-SHA256 + HEX lowercase).
 from __future__ import annotations
 
 import hashlib

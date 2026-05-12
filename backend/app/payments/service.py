@@ -81,6 +81,12 @@ async def process_yoomoney_webhook(session: AsyncSession, params: dict[str, str]
     if not settings.yoomoney_payments_configured():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
+    # В доке ЮMoney: «тестовые уведомления приходят пустыми» — подписи нет, только проверка доступности URL (ответ 200).
+    if not params:
+        logger.info("YooMoney webhook: пустые параметры (тест связи из кабинета)")
+        await session.commit()
+        return
+
     secret = settings.yoomoney_http_notification_secret.strip()
     if not verify_yoomoney_notification_sign(params, secret):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")

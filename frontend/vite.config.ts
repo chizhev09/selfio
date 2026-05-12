@@ -9,6 +9,8 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     emptyOutDir: true,
+    /* Основной бандл ~600kB — выше дефолтных 500kB Vite; не спамить предупреждением при npm run build. */
+    chunkSizeWarningLimit: 900,
   },
   server: {
     proxy: {

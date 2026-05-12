@@ -20,20 +20,19 @@ export type ProfileTopUpPlan = {
 }
 
 /**
- * Три тарифа: 439 → 890 → 1490 ₽.
+ * Три тарифа: старт (тест 5 ₽) → 890 → 1490 ₽.
  * В модалке — горизонтальный скролл; по умолчанию в кадре первые две карточки.
  */
 export const PROFILE_TOP_UP_PLANS: readonly ProfileTopUpPlan[] = [
   {
     planKey: 'start',
-    rubles: 439,
-    tokens: 70,
+    rubles: 5,
+    tokens: 5,
     pill: 'Старт',
     description: 'Первый шаг в ИИ-съёмку — быстро, без давления',
     features: [
-      '70 токенов на баланс',
-      `До 7 обычных генераций (${PROFILE_TOP_UP_TOKENS_PER_REGULAR_GEN} токенов за фото)`,
-      `До 3 про-генераций (${PROFILE_TOP_UP_TOKENS_PER_PRO_GEN} токенов за фото)`,
+      '5 токенов на баланс (тестовый тариф)',
+      `До 1 обычной генерации (${PROFILE_TOP_UP_TOKENS_PER_REGULAR_GEN} токенов за фото)`,
       'Мгновенное зачисление',
     ],
   },

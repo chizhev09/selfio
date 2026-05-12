@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../../../../auth/apiClient'
 import { setTokens } from '../../../../auth/authStorage'
+import { invalidateCachedGet } from '../../app/AppShell/appBootstrapCache'
 import './AuthPages.css'
 
 /** В dev React Strict Mode монтирует эффект дважды; второй POST с тем же code уже получает 401. */
@@ -51,6 +52,7 @@ function OAuthCallbackPage() {
         }
         const data = res.data as { access_token: string; refresh_token: string }
         setTokens(data.access_token, data.refresh_token)
+        invalidateCachedGet('/api/users/me')
         navigate('/app/library', { replace: true })
       } catch {
         oauthExchangeStarted.delete(code)

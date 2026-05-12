@@ -24,7 +24,12 @@ export async function cachedApiGet(path: string, config: ApiFetchConfig = {}): P
   getCache.set(key, requestPromise)
   try {
     const response = await requestPromise
-    getCache.set(key, response)
+    /* Ошибки и 401 не кешируем — иначе после входа снова отдаётся старый 401 и профиль чистит токены. */
+    if (response.status >= 400) {
+      getCache.delete(key)
+    } else {
+      getCache.set(key, response)
+    }
     return response
   } catch (error) {
     getCache.delete(key)
