@@ -1,6 +1,6 @@
 // Логика вкладки «Мои фото»: загрузка списка, плейсхолдеры генераций, скачивание и удаление.
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { apiFetch } from '../../../../../auth/apiClient'
 import { messageFromErrorResponse } from '../../../LandingPage/auth/messageFromErrorResponse'
@@ -24,6 +24,10 @@ export function usePhotosPage() {
   const [pendingDownloadId, setPendingDownloadId] = useState<string | null>(null)
   const [pendingGenerations, setPendingGenerations] = useState<PendingGenerationItem[]>(() => readPendingGenerations())
   const [previewPhoto, setPreviewPhoto] = useState<PhotoItem | null>(null)
+
+  /** Актуальный список ожидающих генераций для интервала (без устаревшего замыкания). */
+  const pendingGenerationsRef = useRef(pendingGenerations)
+  pendingGenerationsRef.current = pendingGenerations
 
   /** Загружает и раскладывает список «мои фото» из кеша bootstrap-запросов. */
   const loadPhotos = useCallback(async (cancelledRef: { cancelled: boolean }) => {
@@ -62,48 +66,70 @@ export function usePhotosPage() {
     navigate(location.pathname, { replace: true, state: null })
   }, [location.pathname, location.state, navigate])
 
+  const pendingIdsKey = pendingGenerations.map((p) => p.requestId).join('|')
+
   useEffect(() => {
-    /** Периодически проверяет статусы генераций и заменяет плейсхолдеры готовыми фото. */
+    /** Опрашивает статус генераций; ref исключает баг, когда интервал видит пустой/старый список. */
     if (pendingGenerations.length === 0) {
       return
     }
     let disposed = false
-    const timer = window.setInterval(() => {
-      void (async () => {
-        const snapshot = [...pendingGenerations]
-        let next = snapshot
-        let shouldRefreshPhotos = false
-        for (const pending of snapshot) {
-          const statusRes = await apiFetch(`/api/storage/generate-from-template/${pending.requestId}`, { method: 'GET' })
-          if (statusRes.status !== 200) {
-            continue
-          }
-          const data = statusRes.data as GenerationStatusJson
-          if (data.status === 'done') {
-            shouldRefreshPhotos = true
-            next = next.filter((item) => item.requestId !== pending.requestId)
-          }
-          if (data.status === 'failed') {
-            next = next.filter((item) => item.requestId !== pending.requestId)
-            setErrText(data.error || 'Одна из генераций завершилась с ошибкой.')
-          }
+    let pollFailuresInRow = 0
+
+    const pollOnce = async () => {
+      if (disposed) return
+      const snapshot = [...pendingGenerationsRef.current]
+      if (snapshot.length === 0) return
+
+      let next = snapshot
+      let shouldRefreshPhotos = false
+      let sawAuthorizedOk = false
+      let lastHttpError: string | null = null
+
+      for (const pending of snapshot) {
+        const statusRes = await apiFetch(`/api/storage/generate-from-template/${pending.requestId}`, { method: 'GET' })
+        if (statusRes.status !== 200) {
+          lastHttpError = messageFromErrorResponse(statusRes)
+          continue
         }
-        if (disposed) return
-        if (next.length !== snapshot.length) {
-          setPendingGenerations(next)
-          writePendingGenerations(next)
+        sawAuthorizedOk = true
+        pollFailuresInRow = 0
+        const data = statusRes.data as GenerationStatusJson
+        if (data.status === 'done') {
+          shouldRefreshPhotos = true
+          next = next.filter((item) => item.requestId !== pending.requestId)
         }
-        if (shouldRefreshPhotos) {
-          invalidateCachedGet('/api/storage/my-photos')
-          await loadPhotos({ cancelled: false })
+        if (data.status === 'failed') {
+          next = next.filter((item) => item.requestId !== pending.requestId)
+          setErrText(data.error || 'Одна из генераций завершилась с ошибкой.')
         }
-      })()
-    }, 2000)
+      }
+
+      if (!sawAuthorizedOk && snapshot.length > 0) {
+        pollFailuresInRow++
+        if (pollFailuresInRow >= 2 && lastHttpError) {
+          setErrText(lastHttpError)
+        }
+      }
+
+      if (disposed) return
+      if (next.length !== snapshot.length) {
+        setPendingGenerations(next)
+        writePendingGenerations(next)
+      }
+      if (shouldRefreshPhotos) {
+        invalidateCachedGet('/api/storage/my-photos')
+        await loadPhotos({ cancelled: false })
+      }
+    }
+
+    void pollOnce()
+    const timer = window.setInterval(() => void pollOnce(), 2000)
     return () => {
       disposed = true
       window.clearInterval(timer)
     }
-  }, [loadPhotos, pendingGenerations])
+  }, [loadPhotos, pendingIdsKey, pendingGenerations.length])
 
   /** Скачивает фото через backend, чтобы избежать CORS ограничений S3. */
   async function handleDownloadPhoto(photo: PhotoItem) {
