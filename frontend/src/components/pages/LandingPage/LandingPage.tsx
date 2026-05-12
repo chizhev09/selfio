@@ -654,15 +654,7 @@ function LandingPage() {
                 Выбирайте из огромной библиотеки готовых ИИ-фотосессий
               </h2>
 
-              {libraryCount === 0 ? (
-                <p className="landing-page__library-empty">
-                  Добавьте 18 изображений в папку{' '}
-                  <code className="landing-page__library-empty-code">Media/library</code> (например{' '}
-                  <code className="landing-page__library-empty-code">1.jpg</code> …{' '}
-                  <code className="landing-page__library-empty-code">18.jpg</code>), затем обновите
-                  страницу.
-                </p>
-              ) : (
+              {libraryCount > 0 ? (
                 <div
                   className="landing-page__library-carousel"
                   aria-roledescription="carousel"
@@ -702,7 +694,7 @@ function LandingPage() {
                     </motion.div>
                   </div>
                 </div>
-              )}
+              ) : null}
 
               <div className="landing-page__library-prose">
                 <p>
