@@ -8,6 +8,29 @@ const CATEGORY_SEARCH_ALIASES: Record<string, string[]> = {
   cafe: ['cafe', 'кафе', 'кофе', 'coffee'],
 }
 
+/** Превращает технические сообщения браузера (например Safari «Load failed») в текст для пользователя. */
+function humanizeManifestLoadError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err)
+  const trimmed = raw.trim()
+  if (/[а-яА-ЯёЁ]/.test(trimmed) && trimmed.length > 0 && trimmed.length < 600) {
+    return trimmed
+  }
+  const lower = trimmed.toLowerCase()
+  if (lower.includes('load failed') || lower.includes('failed to load')) {
+    return 'Не удалось загрузить описание шаблона. Обновите страницу или попробуйте позже.'
+  }
+  if (lower.includes('network error') || lower === 'networkerror') {
+    return 'Нет связи с сервером. Проверьте интернет и авторизацию.'
+  }
+  if (lower.includes('timeout') || lower.includes('timed out')) {
+    return 'Превышено время ожидания. Попробуйте снова.'
+  }
+  if (trimmed && trimmed.length < 240) {
+    return trimmed
+  }
+  return 'Не удалось загрузить описание шаблона (manifest).'
+}
+
 /** Собирает базовый URL библиотеки из переменных окружения с безопасным fallback. */
 function resolveLibraryBaseUrl(): string {
   const fromEnv =
@@ -447,19 +470,14 @@ class LibraryApi {
     return `${base}${path}`
   }
 
-  /** Загружает manifest.json: прямой запрос к базе библиотеки, при ошибке — через бэкенд (приватный бакет / CORS). */
+  /** Загружает manifest.json: сначала через API (аутентификация + приватный S3), иначе прямой URL для публичной библиотеки. */
   async getTemplateManifest(manifestPath: string): Promise<TemplateManifest> {
-    const base = this.resolveAssetBaseUrl()
-    const path = manifestPath.startsWith('/') ? manifestPath : `/${manifestPath}`
-    const url = `${base}${path}`
-    try {
-      const response = await axios.get<TemplateManifest>(url, { timeout: 15_000 })
-      return response.data
-    } catch {
+    /** Тянет JSON manifest с бэкенда — основной путь на проде. */
+    const loadViaApi = async (): Promise<TemplateManifest> => {
       const response = await apiFetch('/api/storage/library-template-manifest', {
         method: 'GET',
         params: { manifest_path: manifestPath },
-        timeout: 15_000,
+        timeout: 20_000,
       })
       if (response.status !== 200) {
         const detail =
@@ -469,6 +487,25 @@ class LibraryApi {
         throw new Error(detail || 'Не удалось загрузить manifest шаблона')
       }
       return response.data as TemplateManifest
+    }
+
+    /** Fallback: прямой GET к CDN/S3 (локальная разработка или публичный бакет). */
+    const loadViaPublicUrl = async (): Promise<TemplateManifest> => {
+      const base = this.resolveAssetBaseUrl()
+      const path = manifestPath.startsWith('/') ? manifestPath : `/${manifestPath}`
+      const url = `${base}${path}`
+      const response = await axios.get<TemplateManifest>(url, { timeout: 15_000 })
+      return response.data
+    }
+
+    try {
+      return await loadViaApi()
+    } catch (apiErr) {
+      try {
+        return await loadViaPublicUrl()
+      } catch {
+        throw new Error(humanizeManifestLoadError(apiErr))
+      }
     }
   }
 
@@ -487,7 +524,7 @@ class LibraryApi {
       if (cached) {
         return cached
       }
-      throw err instanceof Error ? err : new Error('Не удалось загрузить manifest шаблона')
+      throw new Error(humanizeManifestLoadError(err))
     }
   }
 
