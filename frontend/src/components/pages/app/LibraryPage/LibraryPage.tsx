@@ -137,6 +137,7 @@ function LibraryPage() {
         onClose={p.handleCloseGenerateModal}
         onSubmit={() => void p.handleStartGeneration()}
         onRequestTopUp={p.handleNavigateToTopUpFromGenerate}
+        submitError={p.generationError}
       />
       {p.openedPickCard ? (
         <LibraryPickModal

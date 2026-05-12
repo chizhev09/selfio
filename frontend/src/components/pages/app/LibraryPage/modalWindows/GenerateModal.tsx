@@ -28,6 +28,8 @@ interface GenerateModalProps {
   onSubmit: () => void
   /** Переход в профиль с открытием пополнения (при нехватке токенов). */
   onRequestTopUp: () => void
+  /** Текст ошибки с сервера или загрузки — показывается внутри модалки (не под затемнением страницы). */
+  submitError?: string | null
 }
 
 /** Возвращает альтернативный URL, если в S3 отличается регистр расширения файла. */
@@ -59,9 +61,11 @@ export function GenerateModal({
   onClose,
   onSubmit,
   onRequestTopUp,
+  submitError = null,
 }: GenerateModalProps) {
   const [openedHint, setOpenedHint] = useState<'quality' | null>(null)
   const [insufficientOpen, setInsufficientOpen] = useState(false)
+  const [photoRequiredOpen, setPhotoRequiredOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const generationCost =
     quality === 'pro' ? PROFILE_TOP_UP_TOKENS_PER_PRO_GEN : PROFILE_TOP_UP_TOKENS_PER_REGULAR_GEN
@@ -75,6 +79,18 @@ export function GenerateModal({
   useEffect(() => {
     setInsufficientOpen(false)
   }, [quality])
+
+  useEffect(() => {
+    if (selectedPhotoPreviewUrl) {
+      setPhotoRequiredOpen(false)
+    }
+  }, [selectedPhotoPreviewUrl])
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPhotoRequiredOpen(false)
+    }
+  }, [isOpen])
 
   /** Открывает системный диалог выбора изображения через скрытое поле. */
   function handleOpenFileDialog() {
@@ -93,12 +109,17 @@ export function GenerateModal({
     setOpenedHint((prev) => (prev === hint ? null : hint))
   }
 
-  /** По нажатию «Сгенерировать»: при недостатке токенов показывает алерт, иначе вызывает родителя. */
+  /** По нажатию «Сгенерировать»: проверяет баланс и наличие фото, затем вызывает родителя. */
   function handleSubmitClick() {
     if (userTokenBalance < generationCost) {
       setInsufficientOpen(true)
       return
     }
+    if (!selectedPhotoPreviewUrl) {
+      setPhotoRequiredOpen(true)
+      return
+    }
+    setPhotoRequiredOpen(false)
     onSubmit()
   }
 
@@ -267,6 +288,17 @@ export function GenerateModal({
                   Пополнить баланс
                 </button>
               </div>
+            ) : null}
+
+            {submitError ? (
+              <p className="generation-modal__inline-error" role="alert">
+                {submitError}
+              </p>
+            ) : null}
+            {photoRequiredOpen && !submitError ? (
+              <p className="generation-modal__inline-error" role="alert">
+                Прикрепите своё фото слева — без него запрос на генерацию не отправляется.
+              </p>
             ) : null}
 
             <button type="button" className="generation-modal__submit" onClick={handleSubmitClick} disabled={isSubmitting}>

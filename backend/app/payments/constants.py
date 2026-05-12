@@ -13,9 +13,8 @@ class TopUpPlan:
 
 
 # Синхронно с frontend/src/components/pages/ProfilePage/constants/profilePageConstants.ts
-# Тариф start: 5 ₽ / 5 токенов — тестовая цена; перед продом вернуть боевые значения.
 TOP_UP_PLANS: Final[tuple[TopUpPlan, ...]] = (
-    TopUpPlan(key="start", amount_rubles=5, tokens=5),
+    TopUpPlan(key="start", amount_rubles=439, tokens=70),
     TopUpPlan(key="balance", amount_rubles=890, tokens=180),
     TopUpPlan(key="stream", amount_rubles=1490, tokens=330),
 )

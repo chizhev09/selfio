@@ -1,4 +1,17 @@
 /* Styles for generation bottom-sheet modal and controls. */
+/* Inline validation / API errors above the submit button (visible above fullscreen overlay). */
+.generation-modal__inline-error {
+  margin: 0 0 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.65rem;
+  background: rgba(180, 60, 60, 0.22);
+  border: 1px solid rgba(220, 100, 100, 0.45);
+  color: #ffb4b4;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 .generation-modal__backdrop {
   position: fixed;
   inset: 0;

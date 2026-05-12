@@ -514,6 +514,59 @@ def _load_library_category_index_json(client, bucket: str, index_path: str) -> d
     return parsed
 
 
+def _resolve_library_manifest_object_key(manifest_path: str) -> str:
+    """Собирает полный ключ S3 для manifest.json шаблона из поля индекса."""
+    cleaned = manifest_path.strip()
+    if not cleaned:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пустой manifest_path.",
+        )
+    if ".." in cleaned:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="manifest_path содержит запрещённую последовательность '..'.",
+        )
+    normalized = cleaned.lstrip("/")
+    lower = normalized.lower()
+    if not lower.endswith(".json"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="manifest_path должен указывать на .json файл.",
+        )
+    prefix = LIBRARY_ROOT_PREFIX
+    if normalized.startswith(prefix):
+        return normalized
+    return f"{prefix}{normalized}"
+
+
+def _load_library_template_manifest_json(client, bucket: str, manifest_path: str) -> dict[str, Any]:
+    """Читает manifest.json шаблона из библиотеки (как category index, но для промта генерации)."""
+    key = _resolve_library_manifest_object_key(manifest_path)
+    try:
+        obj = _get_s3_object_with_fallbacks(client, bucket, key)
+        body = obj.get("Body")
+        raw_bytes = body.read() if body is not None else b""
+    except ClientError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Ошибка S3 при чтении manifest ({key}): {e}",
+        ) from e
+    try:
+        parsed = json.loads(raw_bytes.decode("utf-8")) if raw_bytes else {}
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Некорректный JSON в manifest ({key}): {e}",
+        ) from e
+    if not isinstance(parsed, dict):
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Ожидался JSON-объект в {key}.",
+        )
+    return parsed
+
+
 def _list_library_for_prefix(
     client,
     bucket: str,
@@ -869,6 +922,21 @@ async def get_library_category_index(
         client = _require_s3_client()
         bucket = get_settings().resolve_s3_bucket()
         return _load_library_category_index_json(client, bucket, index_path)
+
+    return await asyncio.to_thread(_load)
+
+
+@router.get("/library-template-manifest")
+async def get_library_template_manifest(
+    manifest_path: str,
+    _user: Annotated[User, Depends(get_current_user)],
+) -> dict[str, Any]:
+    """Отдаёт manifest.json шаблона из S3 (обход CORS/403 при прямом GET из браузера в приватный бакет)."""
+
+    def _load() -> dict[str, Any]:
+        client = _require_s3_client()
+        bucket = get_settings().resolve_s3_bucket()
+        return _load_library_template_manifest_json(client, bucket, manifest_path)
 
     return await asyncio.to_thread(_load)
 

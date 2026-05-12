@@ -450,11 +450,13 @@ export function useLibraryPage() {
 
   /** Закрывает модальное окно генерации и сохраняет выбранные настройки. */
   function handleCloseGenerateModal() {
+    setGenerationError(null)
     setIsGenerateModalOpen(false)
   }
 
   /** Закрывает генерацию и ведёт в профиль с открытым пополнением. */
   function handleNavigateToTopUpFromGenerate() {
+    setGenerationError(null)
     setIsGenerateModalOpen(false)
     navigate('/app/profile', { state: { openTopUp: true } })
   }
@@ -498,7 +500,14 @@ export function useLibraryPage() {
         contentType,
         selectedPhotoFile.name,
       )
-      const promptToSend = resolvePromptForType(manifestData, generationType)
+      const manifestRecord = await libraryApi.resolveManifestForGenerationSubmit(
+        selectedTemplate.manifest,
+        manifestData,
+      )
+      if (manifestRecord) {
+        setManifestData(manifestRecord)
+      }
+      const promptToSend = resolvePromptForType(manifestRecord, generationType)
       const selectedModel = resolveModelByQuality(quality)
       const generationJob = await libraryApi.generateFromTemplate({
         generation_type: generationType,

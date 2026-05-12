@@ -197,7 +197,14 @@ export function CreateQuickRandomModal({
     setIsSubmitting(true)
     try {
       const userKey = await libraryApi.uploadUserPhotoFile(selectedPhotoFile)
-      const promptToSend = resolvePromptForType(manifestData, generationType)
+      const manifestRecord = await libraryApi.resolveManifestForGenerationSubmit(
+        randomTemplate.manifest,
+        manifestData,
+      )
+      if (manifestRecord) {
+        setManifestData(manifestRecord)
+      }
+      const promptToSend = resolvePromptForType(manifestRecord, generationType)
       const generationJob = await libraryApi.generateFromTemplate({
         generation_type: generationType,
         quality,
@@ -289,12 +296,6 @@ export function CreateQuickRandomModal({
         ) : null}
       </AnimatePresence>
 
-      {submitError && showGenerateModal ? (
-        <div className="create-quick-random__submit-error" role="alert">
-          {submitError}
-        </div>
-      ) : null}
-
       <GenerateModal
         isOpen={showGenerateModal}
         templateTitle={randomTemplate?.title ?? ''}
@@ -310,6 +311,7 @@ export function CreateQuickRandomModal({
         onClose={handleClose}
         onSubmit={() => void handleStartGeneration()}
         onRequestTopUp={onRequestTopUp}
+        submitError={submitError}
       />
     </>
   )

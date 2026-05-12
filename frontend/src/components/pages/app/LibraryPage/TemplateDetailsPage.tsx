@@ -69,7 +69,8 @@ function TemplateDetailsPage() {
   const [template, setTemplate] = useState<Template | null>(null)
   const [related, setRelated] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [generationError, setGenerationError] = useState<string | null>(null)
   const [isFavorite, setIsFavorite] = useState(false)
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false)
   const generationType: 'one_to_one' = 'one_to_one'
@@ -95,13 +96,13 @@ function TemplateDetailsPage() {
     async function loadTemplateDetails() {
       try {
         setLoading(true)
-        setError(null)
+        setLoadError(null)
         const current = await libraryApi.getTemplateById(templateId)
         if (!current) {
           if (!cancelled) {
             setTemplate(null)
             setRelated([])
-            setError('Шаблон не найден')
+            setLoadError('Шаблон не найден')
           }
           return
         }
@@ -112,7 +113,7 @@ function TemplateDetailsPage() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Не удалось загрузить шаблон')
+          setLoadError(err instanceof Error ? err.message : 'Не удалось загрузить шаблон')
         }
       } finally {
         if (!cancelled) {
@@ -172,6 +173,7 @@ function TemplateDetailsPage() {
 
   /** Открывает flow генерации по выбранному шаблону. */
   function handleGenerate() {
+    setGenerationError(null)
     setIsGenerateModalOpen(true)
   }
 
@@ -187,11 +189,13 @@ function TemplateDetailsPage() {
 
   /** Закрывает модальное окно генерации и сохраняет выбранные настройки. */
   function handleCloseGenerateModal() {
+    setGenerationError(null)
     setIsGenerateModalOpen(false)
   }
 
   /** Закрывает генерацию и ведёт в профиль с открытым пополнением. */
   function handleNavigateToTopUpFromGenerate() {
+    setGenerationError(null)
     setIsGenerateModalOpen(false)
     navigate('/app/profile', { state: { openTopUp: true } })
   }
@@ -214,10 +218,11 @@ function TemplateDetailsPage() {
   /** Запускает генерацию с выбранными настройками. */
   async function handleStartGeneration() {
     if (!template || !selectedPhotoFile) {
-      setError('Выберите фото перед запуском генерации')
+      setGenerationError('Выберите фото перед запуском генерации')
       return
     }
     setIsSubmittingGeneration(true)
+    setGenerationError(null)
     try {
       const contentType = selectedPhotoFile.type || 'image/jpeg'
       const presign = await libraryApi.presignUserPhotoUpload(selectedPhotoFile.name, contentType)
@@ -234,7 +239,11 @@ function TemplateDetailsPage() {
         contentType,
         selectedPhotoFile.name,
       )
-      const promptToSend = resolvePromptForType(manifestData, generationType)
+      const manifestRecord = await libraryApi.resolveManifestForGenerationSubmit(template.manifest, manifestData)
+      if (manifestRecord) {
+        setManifestData(manifestRecord)
+      }
+      const promptToSend = resolvePromptForType(manifestRecord, generationType)
       const selectedModel = resolveModelByQuality(quality)
       const generationJob = await libraryApi.generateFromTemplate({
         generation_type: generationType,
@@ -254,7 +263,7 @@ function TemplateDetailsPage() {
       })
       setIsGenerateModalOpen(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось отправить запрос генерации')
+      setGenerationError(err instanceof Error ? err.message : 'Не удалось отправить запрос генерации')
     } finally {
       setIsSubmittingGeneration(false)
     }
@@ -264,8 +273,8 @@ function TemplateDetailsPage() {
     return <div className="template-details template-details__state">Загрузка шаблона...</div>
   }
 
-  if (error || !template) {
-    return <div className="template-details template-details__state">{error || 'Шаблон не найден'}</div>
+  if (loadError || !template) {
+    return <div className="template-details template-details__state">{loadError || 'Шаблон не найден'}</div>
   }
 
   const heroSrc = libraryApi.getImageUrl(template.image)
@@ -337,6 +346,7 @@ function TemplateDetailsPage() {
         onClose={handleCloseGenerateModal}
         onSubmit={() => void handleStartGeneration()}
         onRequestTopUp={handleNavigateToTopUpFromGenerate}
+        submitError={generationError}
       />
     </motion.section>
   )

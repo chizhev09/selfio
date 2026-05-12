@@ -447,12 +447,48 @@ class LibraryApi {
     return `${base}${path}`
   }
 
-  /** Загружает и возвращает manifest.json выбранного шаблона. */
+  /** Загружает manifest.json: прямой запрос к базе библиотеки, при ошибке — через бэкенд (приватный бакет / CORS). */
   async getTemplateManifest(manifestPath: string): Promise<TemplateManifest> {
     const base = this.resolveAssetBaseUrl()
     const path = manifestPath.startsWith('/') ? manifestPath : `/${manifestPath}`
-    const response = await axios.get<TemplateManifest>(`${base}${path}`)
-    return response.data
+    const url = `${base}${path}`
+    try {
+      const response = await axios.get<TemplateManifest>(url, { timeout: 15_000 })
+      return response.data
+    } catch {
+      const response = await apiFetch('/api/storage/library-template-manifest', {
+        method: 'GET',
+        params: { manifest_path: manifestPath },
+        timeout: 15_000,
+      })
+      if (response.status !== 200) {
+        const detail =
+          typeof response.data?.detail === 'string'
+            ? response.data.detail
+            : `HTTP ${response.status}`
+        throw new Error(detail || 'Не удалось загрузить manifest шаблона')
+      }
+      return response.data as TemplateManifest
+    }
+  }
+
+  /** Перед генерацией подтягивает manifest с сервера; если запрос падает, использует уже загруженный кеш. */
+  async resolveManifestForGenerationSubmit(
+    manifestPath: string | undefined,
+    cached: Record<string, unknown> | null,
+  ): Promise<Record<string, unknown> | null> {
+    if (!manifestPath?.trim()) {
+      return cached
+    }
+    try {
+      const fresh = await this.getTemplateManifest(manifestPath)
+      return fresh as Record<string, unknown>
+    } catch (err) {
+      if (cached) {
+        return cached
+      }
+      throw err instanceof Error ? err : new Error('Не удалось загрузить manifest шаблона')
+    }
   }
 
   /** Запрашивает presigned PUT URL для загрузки фото пользователя в S3. */
