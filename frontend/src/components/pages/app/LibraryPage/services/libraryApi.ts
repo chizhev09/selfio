@@ -8,18 +8,30 @@ const CATEGORY_SEARCH_ALIASES: Record<string, string[]> = {
   cafe: ['cafe', 'кафе', 'кофе', 'coffee'],
 }
 
-/** Превращает технические сообщения браузера (Safari «Load failed» и т.п.) в понятный текст. */
-function humanizeManifestLoadError(err: unknown): string {
+/** Превращает технические сообщения браузера (Safari «Load failed», Chrome «Failed to fetch») в понятный текст для модалки генерации. */
+function humanizeBrowserOrNetworkError(err: unknown): string {
   const raw = err instanceof Error ? err.message : String(err)
   const trimmed = raw.trim()
   const lower = trimmed.toLowerCase()
 
-  // Сначала типичные англ. сбои сети/браузера — иначе ниже «короткий текст» вернёт их как есть.
   if (/load\s*fail/i.test(trimmed) || lower.includes('failed to load')) {
-    return 'Не удалось загрузить описание шаблона. Обновите страницу или попробуйте позже.'
+    return (
+      'Не удалось выполнить запрос к хранилищу (часто Safari пишет «Load failed»). ' +
+      'На продакшене проверьте CORS на S3-бакете: разрешите Origin вашего сайта (https://…), метод PUT, заголовок Content-Type. ' +
+      'Иначе загрузка фото перед генерацией блокируется браузером.'
+    )
   }
-  if (lower.includes('network error') || lower === 'networkerror' || lower.includes('err_network')) {
-    return 'Нет связи с сервером. Проверьте интернет и авторизацию.'
+  if (
+    lower.includes('failed to fetch') ||
+    lower.includes('networkerror') ||
+    lower.includes('network error') ||
+    lower.includes('err_network') ||
+    (lower.includes('typeerror') && lower.includes('fetch'))
+  ) {
+    return (
+      'Нет ответа от сервера или хранилища. Проверьте интернет, отключите VPN/блокировщик, ' +
+      'а на VPS — CORS на S3 для PUT с вашего домена (см. комментарий к S3 в backend/.env.example).'
+    )
   }
   if (lower.includes('timeout') || lower.includes('timed out') || lower.includes('exceeded')) {
     return 'Превышено время ожидания. Попробуйте снова.'
@@ -28,9 +40,14 @@ function humanizeManifestLoadError(err: unknown): string {
     return trimmed
   }
   if (trimmed.length > 0 && trimmed.length < 280) {
-    return `Ошибка загрузки шаблона: ${trimmed}`
+    return trimmed
   }
-  return 'Не удалось загрузить описание шаблона (manifest).'
+  return 'Не удалось завершить шаг генерации. Откройте консоль браузера (F12) или логи бэкенда на сервере.'
+}
+
+/** Экспорт для экранов библиотеки: одна точка для текста ошибки в модалке (S3 PUT, manifest, API). */
+export function humanizeGenerationUiError(err: unknown): string {
+  return humanizeBrowserOrNetworkError(err)
 }
 
 /** Собирает базовый URL библиотеки из переменных окружения с безопасным fallback. */
@@ -504,7 +521,7 @@ class LibraryApi {
       try {
         return await loadViaApi()
       } catch (err) {
-        throw new Error(humanizeManifestLoadError(err))
+        throw new Error(humanizeBrowserOrNetworkError(err))
       }
     }
 
@@ -514,7 +531,7 @@ class LibraryApi {
       try {
         return await loadViaPublicUrl()
       } catch {
-        throw new Error(humanizeManifestLoadError(apiErr))
+        throw new Error(humanizeBrowserOrNetworkError(apiErr))
       }
     }
   }

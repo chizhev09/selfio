@@ -20,7 +20,7 @@ import {
   YEREVAN_PICK_TITLE_BY_ID,
 } from '../constants/libraryPageConstants'
 import { useSearch } from './useSearch'
-import { libraryApi } from '../services/libraryApi'
+import { libraryApi, humanizeGenerationUiError } from '../services/libraryApi'
 import type { Template } from '../types/library'
 import type { GenerationAspectRatio, LibraryIndexApiResponse, LibraryIndexCategory, LibraryPickCard } from '../types/libraryPage.types'
 import {
@@ -528,7 +528,7 @@ export function useLibraryPage() {
         },
       })
     } catch (err) {
-      setGenerationError(err instanceof Error ? err.message : 'Не удалось отправить запрос генерации')
+      setGenerationError(humanizeGenerationUiError(err))
     } finally {
       setIsSubmittingGeneration(false)
     }

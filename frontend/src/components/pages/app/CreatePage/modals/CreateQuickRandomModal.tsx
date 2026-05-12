@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { GenerateModal } from '../../LibraryPage/modalWindows/GenerateModal'
-import { libraryApi, resolveGenerationModelForQuality } from '../../LibraryPage/services/libraryApi'
+import { libraryApi, humanizeGenerationUiError, resolveGenerationModelForQuality } from '../../LibraryPage/services/libraryApi'
 import type { Template } from '../../LibraryPage/types/library'
 import '../../LibraryPage/modalWindows/GenerateModal.css'
 import './CreateQuickRandomModal.css'
@@ -223,7 +223,7 @@ export function CreateQuickRandomModal({
       })
       handleClose()
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Не удалось отправить запрос генерации')
+      setSubmitError(humanizeGenerationUiError(err))
     } finally {
       setIsSubmitting(false)
     }

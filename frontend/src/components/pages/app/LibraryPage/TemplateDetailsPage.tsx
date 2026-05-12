@@ -6,7 +6,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useUserTokenBalance } from '../../../../hooks/useUserTokenBalance'
 import { SearchResultsGrid } from './components/SearchResultsGrid'
 import { GenerateModal } from './modalWindows/GenerateModal'
-import { libraryApi } from './services/libraryApi'
+import { libraryApi, humanizeGenerationUiError } from './services/libraryApi'
 import type { Template } from './types/library'
 import './TemplateDetailsPage.css'
 const DEFAULT_PROMPT = 'Сохранить естественный вид, аккуратно перенести стиль шаблона.'
@@ -263,7 +263,7 @@ function TemplateDetailsPage() {
       })
       setIsGenerateModalOpen(false)
     } catch (err) {
-      setGenerationError(err instanceof Error ? err.message : 'Не удалось отправить запрос генерации')
+      setGenerationError(humanizeGenerationUiError(err))
     } finally {
       setIsSubmittingGeneration(false)
     }
