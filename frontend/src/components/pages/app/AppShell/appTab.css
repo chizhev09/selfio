@@ -1,0 +1,58 @@
+/* Общие стили текста на экранах вкладок. */
+.app-tab__h {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.app-tab__p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.app-screen-header {
+  margin: 0 0 0.9rem;
+  padding: 0 clamp(0.5rem, 3vw, 1rem);
+  text-align: center;
+}
+
+.app-screen-title {
+  margin: 0 0 2px;
+  font-family: 'Jost', sans-serif;
+  font-size: clamp(1.28rem, 5vw + 0.35rem, 2.25rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.app-screen-subtitle {
+  margin: 0;
+  font-size: clamp(0.78rem, 2vw, 0.875rem);
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.app-tab__btn {
+  margin-top: 1rem;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-tab__link {
+  color: #c084fc;
+  margin-top: 1.5rem;
+  display: inline-block;
+}
+
+.app-tab__err {
+  color: #f87171;
+}

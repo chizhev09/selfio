@@ -1,0 +1,158 @@
+/* Общая вёрстка длинных юридических статей в разделе /docs (тёмная тема как в приложении). */
+
+.docs-article {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: 2rem 1.25rem 3rem;
+  max-width: 42rem;
+  margin: 0 auto;
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--bg);
+}
+
+.docs-article *,
+.docs-article *::before,
+.docs-article *::after {
+  box-sizing: inherit;
+}
+
+.docs-article__back {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.docs-article__back:hover {
+  text-decoration: underline;
+}
+
+.docs-article__title {
+  margin: 0 0 1rem;
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--text-h);
+}
+
+.docs-article__meta {
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text);
+  opacity: 0.92;
+}
+
+.docs-article__meta-row + .docs-article__meta-row {
+  margin-top: 0.25rem;
+}
+
+.docs-article__divider {
+  margin: 0 0 1.5rem;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.docs-article__section {
+  margin-bottom: 1.5rem;
+}
+
+.docs-article__section:last-child {
+  margin-bottom: 0;
+}
+
+.docs-article__h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.docs-article__p {
+  margin: 0 0 0.65rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.docs-article__p:last-child {
+  margin-bottom: 0;
+}
+
+.docs-article__list {
+  margin: 0 0 0.65rem;
+  padding-left: 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.docs-article__list li + li {
+  margin-top: 0.35rem;
+}
+
+.docs-article__link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.docs-article__link:hover {
+  text-decoration: underline;
+}
+
+.docs-article__strong {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.docs-article__table-wrap {
+  margin: 0 0 0.85rem;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.docs-article__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.docs-article__table th,
+.docs-article__table td {
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.docs-article__table th {
+  font-weight: 600;
+  color: var(--text-h);
+  background: var(--code-bg);
+}
+
+.docs-article__table tr:last-child td {
+  border-bottom: none;
+}
+
+.docs-article__note {
+  margin: 2rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--text);
+  opacity: 0.78;
+}
+
+@media (min-width: 640px) {
+  .docs-article {
+    padding: 2.5rem 1.5rem 3.5rem;
+  }
+
+  .docs-article__title {
+    font-size: 1.875rem;
+  }
+}

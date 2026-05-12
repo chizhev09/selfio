@@ -1,0 +1,343 @@
+/* Профиль: чёрный фон страницы, карточки и кнопки — тёмно-серые плитки. */
+.profile {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-height: 100vh;
+  padding: 0.9rem 0.8rem 2rem;
+  background: #000;
+  color: #f6f6f6;
+  font-family: 'Jost', -apple-system, sans-serif;
+}
+
+.profile-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0 0.6rem;
+}
+
+.profile-topbar__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #f2f2f2;
+  letter-spacing: 0.01em;
+}
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.95rem;
+  border-radius: 0.95rem;
+  background: #151515;
+}
+
+.profile-hero__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  color: #c3c3c3;
+  background: radial-gradient(circle at 28% 18%, #353535 0%, #232323 60%, #1a1a1a 100%);
+}
+
+.profile-hero__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.profile-hero__name {
+  margin: 0;
+  font-size: 1.04rem;
+  font-weight: 500;
+}
+
+.profile-hero__meta {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #969696;
+}
+
+.profile-stats {
+  display: block;
+}
+
+.profile-stat-card {
+  margin: 0;
+  padding: 0.85rem 0.9rem;
+  border-radius: 0.85rem;
+  background: #151515;
+}
+
+.profile-stat-card--balance {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.profile-stat-card__amount-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.15rem;
+}
+
+.profile-stat-card__coin {
+  flex-shrink: 0;
+  color: #e8b84a;
+  filter: drop-shadow(0 0 10px rgba(232, 184, 74, 0.22));
+}
+
+.profile-stat-card__label {
+  margin: 0 0 0.3rem;
+  color: #9a9a9a;
+  font-size: 0.82rem;
+}
+
+.profile-stat-card__value {
+  margin: 0;
+  color: #f8f8f8;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.profile-stat-card__unit {
+  margin-left: 0.2em;
+  font-size: 0.88em;
+  font-weight: 400;
+  color: #b8b8b8;
+}
+
+.profile-topup {
+  margin: 0;
+}
+
+.profile-topup__button {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.95rem;
+  background: #121212;
+  color: rgba(245, 245, 245, 0.92);
+  font-family: 'Jost', -apple-system, sans-serif;
+  font-size: 0.94rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 0.92rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.22s ease, border-color 0.22s ease, color 0.22s ease;
+}
+
+.profile-topup__button:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #161616;
+}
+
+.profile-topup__button:active {
+  background: #1a1a1a;
+}
+
+.profile-panel {
+  background: #151515;
+  border-radius: 0.95rem;
+  overflow: hidden;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.86rem 0.9rem;
+  border: none;
+  border-bottom: 1px solid #252525;
+  background: transparent;
+  color: #f3f3f3;
+  font-family: 'Jost', -apple-system, sans-serif;
+  cursor: pointer;
+}
+
+.profile-row--static {
+  cursor: default;
+}
+
+.profile-row svg {
+  color: #a6a6a6;
+  flex-shrink: 0;
+}
+
+.profile-row__label {
+  margin-right: auto;
+  font-size: 0.93rem;
+}
+
+.profile-row__value {
+  color: #bdbdbd;
+  font-size: 0.84rem;
+  max-width: 40%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-care__content {
+  padding: 0.2rem 0.9rem 0.9rem 2.5rem;
+  border-bottom: 1px solid #252525;
+}
+
+.profile-care__text {
+  margin: 0 0 0.7rem;
+  color: #9b9b9b;
+  font-size: 0.85rem;
+}
+
+.profile-care__logos {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.profile-care__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 0.72rem;
+  background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+  color: #dfdfdf;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 10px rgba(0, 0, 0, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.profile-care__logo:active {
+  background: linear-gradient(180deg, #222 0%, #171717 100%);
+  transform: translateY(1px) scale(0.98);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 2px 6px rgba(0, 0, 0, 0.26);
+}
+
+.profile-care__logo img {
+  width: 1.1rem;
+  height: 1.1rem;
+  filter: none;
+  opacity: 1;
+}
+
+.profile-loading {
+  margin: 0;
+  padding: 1.5rem 0;
+  font-size: 0.88rem;
+  text-align: center;
+  color: #8f8f8f;
+}
+
+.profile-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 2rem;
+}
+
+.profile-error__text {
+  margin: 0;
+  color: #f87171;
+  font-size: 0.9rem;
+}
+
+.profile-link {
+  color: #b6b6b6;
+  font-size: 0.88rem;
+  text-decoration: none;
+  border-bottom: 1px solid #434343;
+}
+
+.profile-legal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.34rem;
+  margin-top: 0.15rem;
+}
+
+.profile-legal__link {
+  color: #a8a8a8;
+  font-size: 0.84rem;
+  text-decoration: none;
+  text-align: center;
+}
+
+.profile-legal__link--bold {
+  font-weight: 600;
+}
+
+.profile-legal__link--underlined {
+  text-decoration: underline;
+  text-underline-offset: 0.12rem;
+}
+
+.profile-legal__link:active {
+  color: #c9c9c9;
+}
+
+.profile-delete-account {
+  width: 100%;
+  padding: 0.85rem;
+  border: none;
+  border-radius: 0.85rem;
+  background: #2a1515;
+  color: #ff9b9b;
+  font-family: 'Jost', -apple-system, sans-serif;
+  font-size: 0.93rem;
+  cursor: pointer;
+}
+
+.profile-delete-account:active {
+  background: #351a1a;
+}
+
+.profile-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.9rem;
+  margin-top: 0.4rem;
+  border: none;
+  border-radius: 0.85rem;
+  background: #161616;
+  color: #ff7b7b;
+  font-family: 'Jost', -apple-system, sans-serif;
+  font-size: 0.97rem;
+  cursor: pointer;
+}
+
+.profile-logout:active {
+  background: #242424;
+}
+
+.profile-payment-notice {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: #e5e5e5;
+  background: rgba(192, 132, 252, 0.12);
+  border: 1px solid rgba(192, 132, 252, 0.35);
+}
+
+.profile-payment-notice--fail {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fecaca;
+}

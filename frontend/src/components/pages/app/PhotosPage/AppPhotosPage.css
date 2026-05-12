@@ -1,0 +1,190 @@
+/* Сетка превью для вкладки «Мои фото». */
+.photos-page__err {
+  color: #f87171;
+  margin: 0.75rem 0;
+}
+
+.photos-grid {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 0.7rem;
+}
+
+.photos-grid__cell {
+  position: relative;
+  margin: 0 0 0.7rem;
+  break-inside: avoid;
+  border-radius: 14px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.photos-grid__img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+  display: block;
+  background: transparent;
+}
+
+.photos-grid__preview-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.photos-grid__cell--placeholder {
+  background: #111;
+}
+
+.photos-grid__placeholder-photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #141414 0%, #0e0e0e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photos-grid__wave {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.photos-grid__wave span {
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  animation: photos-dot-wave 1.2s infinite ease-in-out;
+}
+
+.photos-grid__wave span:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.photos-grid__wave span:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+@keyframes photos-dot-wave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+
+  30% {
+    transform: translateY(-0.32rem);
+    opacity: 1;
+  }
+}
+
+.photos-grid__actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+.photos-grid__action {
+  width: auto;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.1rem 0.2rem;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.photos-grid__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 1.9;
+}
+
+.photos-grid__action:hover {
+  transform: translateY(-1px);
+  opacity: 0.88;
+}
+
+.photos-grid__action:disabled {
+  opacity: 0.45;
+  cursor: wait;
+  transform: none;
+}
+
+.photos-grid__action--delete {
+  color: #ff4d4f;
+}
+
+.photos-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.68);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.photos-preview__card {
+  position: relative;
+  width: min(86vw, 520px);
+  max-height: min(82vh, 760px);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0d0d0d;
+}
+
+.photos-preview__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(82vh, 760px);
+  object-fit: contain;
+}
+
+.photos-preview__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+@media (min-width: 540px) {
+  .photos-grid {
+    columns: 3;
+  }
+}

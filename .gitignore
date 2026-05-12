@@ -1,0 +1,17 @@
+# Секреты — не коммитить; на сервере копируешь из .env.example и правишь руками.
+**/.env
+!**/.env.example
+
+# Python (backend)
+backend/.venv/
+**/__pycache__/
+*.py[cod]
+
+# Node / фронт
+frontend/node_modules/
+frontend/dist/
+
+# IDE и ОС
+.idea/
+.vscode/
+.DS_Store

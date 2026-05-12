@@ -1,0 +1,142 @@
+/* Модалка «по промту»: компактный sheet, одно вертикальное фото по центру, промт снизу. */
+
+.generation-modal--compact-prompt {
+  min-height: 0;
+  padding: 0.5rem 0.55rem calc(4.35rem + env(safe-area-inset-bottom, 0px));
+}
+
+.generation-modal--compact-prompt .generation-modal__header {
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.2rem;
+  gap: 0.5rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__header h3 {
+  font-size: 0.92rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__subtitle {
+  font-size: 0.66rem;
+  line-height: 1.18;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.create-prompt-modal__media-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22rem;
+  margin-bottom: 0.48rem;
+}
+
+.create-prompt-modal__photo-label {
+  font-size: 0.68rem;
+  width: 100%;
+  text-align: center;
+}
+
+.generation-modal--compact-prompt .generation-modal__media-input {
+  box-sizing: border-box;
+  width: auto;
+  max-width: 100%;
+  height: min(52vw, 196px);
+  aspect-ratio: 9 / 16;
+  margin-inline: auto;
+  border-radius: 0.72rem;
+}
+
+.create-prompt-modal__prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  margin-bottom: 0.48rem;
+}
+
+.create-prompt-modal__prompt .generation-modal__media-label {
+  font-size: 0.68rem;
+}
+
+.create-prompt-modal__prompt-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3.15rem;
+  max-height: 5.75rem;
+  padding: 0.42rem 0.5rem;
+  margin: 0;
+  border-radius: 0.65rem;
+  border: 1px solid #2e2e2e;
+  background: #141414;
+  color: #ececec;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.32;
+  resize: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.create-prompt-modal__prompt-input::placeholder {
+  color: #5c5c5c;
+}
+
+.create-prompt-modal__prompt-input:focus {
+  outline: none;
+  border-color: #4a4a4a;
+}
+
+.generation-modal--compact-prompt .generation-modal__section {
+  margin-bottom: 0.48rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__section-title {
+  font-size: 0.78rem;
+  margin-bottom: 0.28rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__hint-text {
+  margin-bottom: 0.35rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.72rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__options-row {
+  gap: 0.38rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__option {
+  height: 2.05rem;
+  font-size: 0.78rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__option--format {
+  height: 2.35rem;
+  font-size: 0.7rem;
+  gap: 0.22rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__coins {
+  margin: 0.05rem 0 0.42rem;
+  font-size: 0.76rem;
+  gap: 0.08rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__coins-label {
+  font-size: 0.68rem;
+}
+
+.generation-modal--compact-prompt .generation-modal__submit {
+  height: 2.45rem;
+  font-size: 0.88rem;
+}
+
+@media (max-width: 420px) {
+  .generation-modal--compact-prompt {
+    padding: 0.45rem 0.5rem calc(4.2rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .generation-modal--compact-prompt .generation-modal__media-input {
+    height: min(56vw, 176px);
+  }
+}
