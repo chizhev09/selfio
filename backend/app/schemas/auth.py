@@ -50,7 +50,7 @@ class UserPublicNested(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    email: EmailStr
+    email: str
     username: str
     is_verified: bool
     balance: int
