@@ -1,4 +1,4 @@
-// Шапка библиотеки: поиск и горизонтальный ряд категорий.
+// Шапка библиотеки: поиск (library-header__search-wrap даёт поля на узком экране) и ряд категорий на всю ширину.
 
 import { LIBRARY_CATEGORY_SKELETON_WIDTHS_REM } from '../constants/libraryPageConstants'
 import type { LibraryIndexCategory } from '../types/libraryPage.types'
@@ -31,8 +31,10 @@ export function LibraryHeader({
   return (
     <header className="library-header">
       {showSearch ? (
-        <div className="library-header__search">
-          <Search value={query} onChange={onSearchChange} onClear={onSearchClear} />
+        <div className="library-header__search-wrap">
+          <div className="library-header__search">
+            <Search value={query} onChange={onSearchChange} onClear={onSearchClear} />
+          </div>
         </div>
       ) : null}
       <div

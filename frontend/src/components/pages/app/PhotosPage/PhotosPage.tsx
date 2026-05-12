@@ -11,7 +11,7 @@ function PhotosPage() {
   const showGrid = p.pendingGenerations.length > 0 || (p.items?.length ?? 0) > 0
 
   return (
-    <>
+    <div className="photos-page">
       <p className="app-screen-subtitle">Здесь хранятся ваши генерации, готовые к скачиванию и редактированию.</p>
 
       {p.errText ? <p className="photos-page__err">{p.errText}</p> : null}
@@ -33,7 +33,7 @@ function PhotosPage() {
       ) : null}
 
       {p.previewPhoto ? <PhotosPreviewModal photo={p.previewPhoto} onClose={p.handleClosePreview} /> : null}
-    </>
+    </div>
   )
 }
 

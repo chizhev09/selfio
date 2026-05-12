@@ -4,7 +4,7 @@
   flex-direction: column;
   gap: 0.85rem;
   min-height: 100%;
-  background: #000;
+  background: transparent;
   color: #fff;
   padding: 0 0.55rem 1rem;
   box-sizing: border-box;
@@ -102,3 +102,24 @@
   column-gap: 1.05rem;
 }
 
+@media (max-width: 767px) {
+  .template-details {
+    padding-left: max(0.68rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.68rem, env(safe-area-inset-right, 0px));
+  }
+
+  .template-details__related-wrap {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .template-details__related-title {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .template-details__actions {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}

@@ -11,10 +11,17 @@ import AppNavBar from '../NavBar/AppNavBar'
 import { primeAppBootstrapData } from './appBootstrapCache'
 import './AppShell.css'
 
-/** Проверяет токен и показывает макет с верхним баром; на «Создать» убирает боковые поля main. */
+/**
+ * Нужен ли у main нулевой горизонтальный padding: без этого у ленты остаётся внешняя полоса,
+ * и горизонтальные рельсы (чипы, подборки) не доезжают до края экрана при свайпе.
+ */
+function shouldBleedMainHorizontal(pathname: string): boolean {
+  return pathname.includes('create-profile') || pathname.includes('/library')
+}
+
+/** Проверяет токен и показывает макет с верхним баром; при bleed убирает боковые поля main. Холст приложения — #000. */
 function AppShell() {
   const location = useLocation()
-  const isCreateProfileRoute = location.pathname.includes('create-profile')
 
   useEffect(() => {
     /** Прогревает базовые данные после входа, чтобы вкладки не дергали API повторно. */
@@ -25,7 +32,8 @@ function AppShell() {
     return <Navigate to="/login" replace />
   }
 
-  const mainClassName = ['app-shell__main', isCreateProfileRoute ? 'app-shell__main--bleed-x' : '']
+  const pathname = location.pathname
+  const mainClassName = ['app-shell__main', shouldBleedMainHorizontal(pathname) ? 'app-shell__main--bleed-x' : '']
     .filter(Boolean)
     .join(' ')
 

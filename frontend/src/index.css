@@ -4,7 +4,8 @@
 :root {
   --text: #9ca3af;
   --text-h: #f3f4f6;
-  --bg: #000;
+  /* Холст приложения: тот же порядок яркости, что у карточек (#161616…), чтобы боковые поля padding не читались как отдельные чёрные полосы. */
+  --bg: #121212;
   --border: #2e303a;
   --code-bg: #1f2028;
   --accent: #c084fc;
@@ -46,17 +47,26 @@
   flex-direction: column;
   flex: 1;
   box-sizing: border-box;
+  background: var(--bg);
 }
 
 html {
+  width: 100%;
   overflow-x: clip;
   min-height: 100dvh;
+  background: var(--bg);
 }
 
 body {
   margin: 0;
+  padding: 0;
   min-width: 0;
+  width: 100%;
   overflow-x: clip;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
 }
 
 h1,

@@ -1,4 +1,16 @@
 /* Сетка превью для вкладки «Мои фото». */
+.photos-page {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .photos-page {
+    padding-left: max(0.68rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.68rem, env(safe-area-inset-right, 0px));
+  }
+}
+
 .photos-page__err {
   color: #f87171;
   margin: 0.75rem 0;

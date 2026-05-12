@@ -1,4 +1,4 @@
-/* Библиотека в стиле Pinterest — минималистично, 2 колонки */
+/* Библиотека в стиле Pinterest — минималистично, 2 колонки; холст экрана — чистый чёрный (#000). */
 .library {
   box-sizing: border-box;
   flex: 1;
@@ -8,6 +8,12 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  /* Один отступ с чипами: на широкой колонке как у шапки (1rem); на узкой — переопределение в медиазапросе. */
+  --lib-inset-l: 1rem;
+  --lib-inset-r: 1rem;
+  /* Холст #000; карточки подборок чуть светлее — заметное отличие без «плашки» у рельсы. */
+  --library-pick-card-bg: #161616;
+  --library-pick-card-inner-bg: #121212;
 }
 
 .library__error {
@@ -60,7 +66,7 @@
 }
 
 .library-section-title-wrap {
-  padding: 0.45rem 1rem 0.15rem;
+  padding: 0.45rem var(--lib-inset-r, 1rem) 0.15rem var(--lib-inset-l, 1rem);
 }
 
 .library-section-title {
@@ -83,6 +89,11 @@
 
 .library-header__search {
   position: relative;
+}
+
+/* Обёртка строки поиска: на узком экране даёт боковые поля; категории идут отдельной строкой на всю ширину. */
+.library-header__search-wrap {
+  display: block;
 }
 
 /* Два ряда чипов, заполняем колонками; ширина растёт вправо — снаружи горизонтальный скролл. */
@@ -119,7 +130,7 @@
 /* Карусель сразу под липкой шапкой (поиск и категории остаются сверху экрана) */
 .library-hero--below-header {
   margin-top: 0;
-  padding: 0.35rem 1rem 0.35rem;
+  padding: 0.35rem var(--lib-inset-r, 1rem) 0.35rem var(--lib-inset-l, 1rem);
   box-sizing: border-box;
 }
 
@@ -700,12 +711,21 @@
   display: block;
 }
 
-/* Подборки: три горизонтальные рельсы с карточками 2×2 */
+/*
+ * Подборки: оболочка с симметричными полями (--lib-inset-l / --lib-inset-r).
+ * Скролл «ломает» отступы слева/справа (margin + width), внутри — padding. Рельса прозрачная (#000); серое только у карточек.
+ */
 .library-picks {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
   padding: 0.25rem 0 0.2rem;
+}
+
+.library-picks__shell {
+  box-sizing: border-box;
+  padding-inline-start: var(--lib-inset-l, 1rem);
+  padding-inline-end: var(--lib-inset-r, 1rem);
 }
 
 .library-picks__rail {
@@ -717,7 +737,8 @@
 }
 
 .library-picks__rail-title {
-  margin: 0 0.5rem 0.5rem;
+  margin: 0 0 0.5rem;
+  box-sizing: border-box;
   font-family: 'Jost', sans-serif;
   font-size: 0.95rem;
   font-weight: 600;
@@ -729,14 +750,23 @@
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  padding: 0 0.5rem 0.4rem;
+  box-sizing: border-box;
+  margin-inline-start: calc(-1 * var(--lib-inset-l, 1rem));
+  margin-inline-end: calc(-1 * var(--lib-inset-r, 1rem));
+  padding: 0 0 0.4rem;
+  padding-inline-start: var(--lib-inset-l, 1rem);
+  padding-inline-end: var(--lib-inset-r, 1rem);
+  width: calc(100% + var(--lib-inset-l, 1rem) + var(--lib-inset-r, 1rem));
+  max-width: none;
+  /* Прозрачно: фон страницы #000; серый только у самих карточек. */
+  background: transparent;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x proximity;
   scrollbar-width: none;
-  touch-action: pan-x;
+  /* Без scroll-snap — свободный горизонтальный скролл, без «приклеивания» к карточкам. */
+  touch-action: pan-x pan-y;
 }
 
 .library-picks__scroller::-webkit-scrollbar {
@@ -757,15 +787,20 @@
   padding: 0;
   border: none;
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--library-pick-card-bg, #161616);
   overflow: hidden;
   cursor: pointer;
-  scroll-snap-align: start;
   transition: background-color 0.2s ease, transform 0.15s ease;
+  touch-action: inherit;
+}
+
+.library-picks__card:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.42);
+  outline-offset: 2px;
 }
 
 .library-picks__card:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #1e1e1e;
 }
 
 .library-picks__card:active {
@@ -780,7 +815,7 @@
   width: 100%;
   height: var(--pick-card-width);
   flex: 0 0 var(--pick-card-width);
-  background: #0c0c0c;
+  background: var(--library-pick-card-inner-bg, #121212);
 }
 
 .library-picks__grid img {
@@ -790,6 +825,9 @@
   object-fit: cover;
   object-position: center;
   display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* В превью карточки показываем строго 2x2 (не более 4 изображений). */
@@ -809,16 +847,17 @@
   font-weight: 500;
   color: #e7e7e7;
   line-height: 1.25;
-  background: #111;
+  background: var(--library-pick-card-bg, #161616);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
   text-overflow: ellipsis;
+  touch-action: inherit;
 }
 
 .library-picks__rail-title--skeleton {
   width: min(42%, 9.5rem);
   height: 0.95rem;
-  margin: 0 0.5rem 0.5rem;
+  margin: 0 0 0.5rem;
   border-radius: 0.5rem;
   box-sizing: border-box;
 }
@@ -830,7 +869,7 @@
 
 .library-picks__grid--skeleton {
   gap: 2px;
-  background: #030303;
+  background: var(--library-pick-card-inner-bg, #121212);
 }
 
 .library-picks__skeleton-cell {
@@ -844,8 +883,8 @@
   display: flex;
   align-items: center;
   padding: 0.55rem 0.6rem;
-  background: #060606;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--library-pick-card-bg, #161616);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .library-picks__skeleton-caption {
@@ -954,23 +993,9 @@
   .library-picks__card {
     --pick-card-width: 10.5rem;
   }
-
-  .library-picks__rail-title {
-    margin-left: 0.7rem;
-    margin-right: 0.7rem;
-  }
-
-  .library-picks__rail-title--skeleton {
-    margin-left: 0.7rem;
-    margin-right: 0.7rem;
-  }
-
-  .library-picks__scroller {
-    padding-left: 0.7rem;
-    padding-right: 0.7rem;
-  }
 }
 
+/* Подборки: узкая колонка по центру от 768px. */
 @media (min-width: 768px) {
   .library-picks {
     max-width: 860px;
@@ -1245,6 +1270,117 @@
     margin: 0 auto;
     row-gap: 1.35rem;
     column-gap: 1.2rem;
+  }
+}
+
+/*
+ * Узкий экран: без полос у шапки (липкий блок на всю ширину). Отступы — у поиска и заголовков;
+ * горизонтальные ряды (чипы, подборки, hero) на всю ширину, padding внутри скролла/у краёв кадра,
+ * чтобы первый элемент не обрезался, а при свайпе карточки доходили к краю экрана.
+ */
+@media (max-width: 767px) {
+  .library {
+    --lib-inset-l: max(0.68rem, env(safe-area-inset-left, 0px));
+    --lib-inset-r: max(0.68rem, env(safe-area-inset-right, 0px));
+  }
+
+  /*
+   * Явные поля без цепочки наследования: если var() на потомке даёт invalid, отступ не пропадает
+   * (типичная причина «всё впритык» на части WebView).
+   */
+  .library-section-title-wrap {
+    padding-left: max(0.68rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.68rem, env(safe-area-inset-right, 0px));
+  }
+
+  .library-hero--below-header {
+    padding-left: max(0.68rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.68rem, env(safe-area-inset-right, 0px));
+  }
+
+  .library-header {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .library-header__search-wrap {
+    padding-left: var(--lib-inset-l);
+    padding-right: var(--lib-inset-r);
+  }
+
+  /* Чипы: только слева отступ от края; справа без поля — ряд уходит к краю экрана при горизонтальном скролле. */
+  .library-header__categories {
+    padding-left: var(--lib-inset-l);
+    padding-right: 0;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  /* Герой «Тренды»: горизонтальные поля уже из --lib-inset-* на .library (без лишней полосы). */
+
+  .library-hero__viewport {
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0.85rem;
+    box-shadow:
+      0 10px 26px rgba(0, 0, 0, 0.34),
+      0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  }
+
+  .library-popular {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .library-popular__title {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: var(--lib-inset-l);
+    padding-right: 0;
+    box-sizing: border-box;
+  }
+
+  .library-popular__scroller {
+    padding-left: var(--lib-inset-l);
+    padding-right: 0;
+    box-sizing: border-box;
+  }
+
+  .library-flowers-grid,
+  .library-summer-vibe,
+  .library-in-park,
+  .library-in-car,
+  .library-at-home,
+  .library-beach,
+  .library-mountains,
+  .library-red-daring,
+  .library-business-grid {
+    padding-left: var(--lib-inset-l);
+    padding-right: var(--lib-inset-r);
+  }
+
+  .library-results-grid {
+    padding-left: var(--lib-inset-l);
+    padding-right: var(--lib-inset-r);
+    column-gap: 0.72rem;
+  }
+
+  .library-results-panel {
+    padding-left: var(--lib-inset-l);
+    padding-right: var(--lib-inset-r);
+  }
+
+  .library-picks {
+    padding-left: 0;
+    padding-right: 0;
+    box-sizing: border-box;
+  }
+
+  .library__error {
+    margin-left: var(--lib-inset-l);
+    margin-right: var(--lib-inset-r);
   }
 }
 

@@ -85,6 +85,14 @@
   outline-offset: 2px;
 }
 
+/* На узком экране боковые поля только у .app-shell__main — у топбара убираем лишние 0.9rem. */
+@media (max-width: 767px) {
+  .app-topbar {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
 @media (max-width: 360px) {
   .app-topbar__title {
     font-size: 1.28rem;

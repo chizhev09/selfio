@@ -6,9 +6,16 @@
   gap: 0.9rem;
   min-height: 100vh;
   padding: 0.9rem 0.8rem 2rem;
-  background: #000;
+  background: transparent;
   color: #f6f6f6;
   font-family: 'Jost', -apple-system, sans-serif;
+}
+
+@media (max-width: 767px) {
+  .profile {
+    padding-left: max(0.68rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.68rem, env(safe-area-inset-right, 0px));
+  }
 }
 
 .profile-topbar {
