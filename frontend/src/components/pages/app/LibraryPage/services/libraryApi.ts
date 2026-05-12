@@ -8,25 +8,27 @@ const CATEGORY_SEARCH_ALIASES: Record<string, string[]> = {
   cafe: ['cafe', 'кафе', 'кофе', 'coffee'],
 }
 
-/** Превращает технические сообщения браузера (например Safari «Load failed») в текст для пользователя. */
+/** Превращает технические сообщения браузера (Safari «Load failed» и т.п.) в понятный текст. */
 function humanizeManifestLoadError(err: unknown): string {
   const raw = err instanceof Error ? err.message : String(err)
   const trimmed = raw.trim()
+  const lower = trimmed.toLowerCase()
+
+  // Сначала типичные англ. сбои сети/браузера — иначе ниже «короткий текст» вернёт их как есть.
+  if (/load\s*fail/i.test(trimmed) || lower.includes('failed to load')) {
+    return 'Не удалось загрузить описание шаблона. Обновите страницу или попробуйте позже.'
+  }
+  if (lower.includes('network error') || lower === 'networkerror' || lower.includes('err_network')) {
+    return 'Нет связи с сервером. Проверьте интернет и авторизацию.'
+  }
+  if (lower.includes('timeout') || lower.includes('timed out') || lower.includes('exceeded')) {
+    return 'Превышено время ожидания. Попробуйте снова.'
+  }
   if (/[а-яА-ЯёЁ]/.test(trimmed) && trimmed.length > 0 && trimmed.length < 600) {
     return trimmed
   }
-  const lower = trimmed.toLowerCase()
-  if (lower.includes('load failed') || lower.includes('failed to load')) {
-    return 'Не удалось загрузить описание шаблона. Обновите страницу или попробуйте позже.'
-  }
-  if (lower.includes('network error') || lower === 'networkerror') {
-    return 'Нет связи с сервером. Проверьте интернет и авторизацию.'
-  }
-  if (lower.includes('timeout') || lower.includes('timed out')) {
-    return 'Превышено время ожидания. Попробуйте снова.'
-  }
-  if (trimmed && trimmed.length < 240) {
-    return trimmed
+  if (trimmed.length > 0 && trimmed.length < 280) {
+    return `Ошибка загрузки шаблона: ${trimmed}`
   }
   return 'Не удалось загрузить описание шаблона (manifest).'
 }
@@ -470,14 +472,14 @@ class LibraryApi {
     return `${base}${path}`
   }
 
-  /** Загружает manifest.json: сначала через API (аутентификация + приватный S3), иначе прямой URL для публичной библиотеки. */
+  /** Загружает manifest.json: на проде только через API (без прямого GET к S3 из браузера → нет Safari «Load failed»). */
   async getTemplateManifest(manifestPath: string): Promise<TemplateManifest> {
-    /** Тянет JSON manifest с бэкенда — основной путь на проде. */
+    /** Тянет JSON manifest с бэкенда (S3 читается на сервере). */
     const loadViaApi = async (): Promise<TemplateManifest> => {
       const response = await apiFetch('/api/storage/library-template-manifest', {
         method: 'GET',
         params: { manifest_path: manifestPath },
-        timeout: 20_000,
+        timeout: 25_000,
       })
       if (response.status !== 200) {
         const detail =
@@ -489,13 +491,21 @@ class LibraryApi {
       return response.data as TemplateManifest
     }
 
-    /** Fallback: прямой GET к CDN/S3 (локальная разработка или публичный бакет). */
+    /** Fallback только для dev: прямой GET к библиотеке без нового эндпоинта. */
     const loadViaPublicUrl = async (): Promise<TemplateManifest> => {
       const base = this.resolveAssetBaseUrl()
       const path = manifestPath.startsWith('/') ? manifestPath : `/${manifestPath}`
       const url = `${base}${path}`
       const response = await axios.get<TemplateManifest>(url, { timeout: 15_000 })
       return response.data
+    }
+
+    if (import.meta.env.PROD) {
+      try {
+        return await loadViaApi()
+      } catch (err) {
+        throw new Error(humanizeManifestLoadError(err))
+      }
     }
 
     try {
@@ -509,7 +519,11 @@ class LibraryApi {
     }
   }
 
-  /** Перед генерацией подтягивает manifest с сервера; если запрос падает, использует уже загруженный кеш. */
+  /**
+   * Перед генерацией подтягивает manifest; при ошибке возвращает кеш или null.
+   * Null допустим: тогда resolvePromptForType подставит запасной промпт — запрос генерации всё равно уйдёт на бэкенд.
+   * Раньше здесь бросали исключение, из‑за чего POST generate-from-template не вызывался и в модалке светилось «Load failed».
+   */
   async resolveManifestForGenerationSubmit(
     manifestPath: string | undefined,
     cached: Record<string, unknown> | null,
@@ -524,7 +538,8 @@ class LibraryApi {
       if (cached) {
         return cached
       }
-      throw new Error(humanizeManifestLoadError(err))
+      console.warn('[Selfio] manifest не загрузился, используем запасной промпт для генерации.', err)
+      return null
     }
   }
 
