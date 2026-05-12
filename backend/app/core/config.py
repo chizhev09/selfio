@@ -198,6 +198,23 @@ class Settings(BaseSettings):
         """Проверяет, заданы ли номер кошелька и секрет HTTP-уведомлений для приёма через ЮMoney."""
         return bool(self.yoomoney_receiver.strip() and self.yoomoney_http_notification_secret.strip())
 
+    def resolve_library_browser_base_url(self) -> str:
+        """Публичная база для статических URL карточек библиотеки (суффикс …/S3_selfio/library), как на фронте при VITE_S3_*."""
+        default_fallback = "https://flowsee-library.s3.eu-central-1.amazonaws.com"
+        from_env = (self.s3_public_base_url or "").strip().rstrip("/")
+        endpoint = (from_env or self.resolve_s3_endpoint() or default_fallback).rstrip("/")
+        bucket = self.resolve_s3_bucket()
+        if (
+            bucket
+            and "s3.twcstorage.ru" in endpoint
+            and not endpoint.endswith(f"/{bucket}")
+            and f"://{bucket}." not in endpoint
+        ):
+            endpoint = f"{endpoint}/{bucket}"
+        if endpoint.endswith("/S3_selfio/library"):
+            return endpoint
+        return f"{endpoint}/S3_selfio/library"
+
 
 @lru_cache
 def get_settings() -> Settings:

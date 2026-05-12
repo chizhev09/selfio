@@ -412,6 +412,13 @@ class LibraryApi {
     return allTemplates.find((template) => template.id === templateId) || null
   }
 
+  /** База для путей к превью и манифестам: из root index (после загрузки) или из переменных сборки. */
+  private resolveAssetBaseUrl(): string {
+    const fromRoot = this.rootIndex?.base_url?.trim()
+    const raw = fromRoot || BASE_URL
+    return raw.replace(/\/+$/, '')
+  }
+
   /** Возвращает похожие шаблоны для детали: сначала по категории, затем по тегам. */
   async getRelatedTemplates(template: Template, limit = 20): Promise<Template[]> {
     const allTemplates = await this.getAllTemplates()
@@ -432,12 +439,19 @@ class LibraryApi {
 
   /** Формирует абсолютный URL изображения шаблона. */
   getImageUrl(imagePath: string): string {
-    return `${BASE_URL}${imagePath}`
+    if (/^https?:\/\//i.test(imagePath)) {
+      return imagePath
+    }
+    const base = this.resolveAssetBaseUrl()
+    const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`
+    return `${base}${path}`
   }
 
   /** Загружает и возвращает manifest.json выбранного шаблона. */
   async getTemplateManifest(manifestPath: string): Promise<TemplateManifest> {
-    const response = await axios.get<TemplateManifest>(`${BASE_URL}${manifestPath}`)
+    const base = this.resolveAssetBaseUrl()
+    const path = manifestPath.startsWith('/') ? manifestPath : `/${manifestPath}`
+    const response = await axios.get<TemplateManifest>(`${base}${path}`)
     return response.data
   }
 

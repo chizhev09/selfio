@@ -202,6 +202,16 @@ def _caption_from_object_key(object_key: str) -> str | None:
     return base.rsplit(".", 1)[0].replace("_", " ")[:80] or None
 
 
+def _inject_library_base_url_if_missing(data: dict[str, Any]) -> dict[str, Any]:
+    """Дописывает base_url для фронта, если в index.json его нет — иначе превью ломаются без VITE_S3_* в сборке."""
+    raw = data.get("base_url")
+    if isinstance(raw, str) and raw.strip():
+        return data
+    out = dict(data)
+    out["base_url"] = get_settings().resolve_library_browser_base_url()
+    return out
+
+
 def _library_view_url(client, bucket: str, object_key: str) -> str:
     """Возвращает URL картинки: публичная база из .env или presigned GET на 7 суток."""
     settings = get_settings()
@@ -872,7 +882,8 @@ async def get_library_index_raw(
     def _load() -> dict[str, Any]:
         client = _require_s3_client()
         bucket = get_settings().resolve_s3_bucket()
-        return _load_library_index_json(client, bucket)
+        payload = _load_library_index_json(client, bucket)
+        return _inject_library_base_url_if_missing(payload)
 
     return await asyncio.to_thread(_load)
 
