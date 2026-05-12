@@ -5,6 +5,11 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  /* Прод: nginx root = /var/www/selfio/dist — сборка должна попадать туда же (не в frontend/dist). */
+  build: {
+    outDir: '../dist',
+    emptyOutDir: true,
+  },
   server: {
     proxy: {
       '/api': {

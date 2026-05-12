@@ -10,6 +10,7 @@ backend/.venv/
 # Node / фронт
 frontend/node_modules/
 frontend/dist/
+/dist
 
 # IDE и ОС
 .idea/
