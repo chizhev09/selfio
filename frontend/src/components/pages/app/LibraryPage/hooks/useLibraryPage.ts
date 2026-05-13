@@ -20,7 +20,7 @@ import {
   YEREVAN_PICK_TITLE_BY_ID,
 } from '../constants/libraryPageConstants'
 import { useSearch } from './useSearch'
-import { libraryApi, humanizeGenerationUiError } from '../services/libraryApi'
+import { libraryApi, humanizeGenerationUiError, GEMINI_GENERATION_IMAGE_MODEL } from '../services/libraryApi'
 import type { Template } from '../types/library'
 import type { GenerationAspectRatio, LibraryIndexApiResponse, LibraryIndexCategory, LibraryPickCard } from '../types/libraryPage.types'
 import {
@@ -30,12 +30,8 @@ import {
   pickTemplatesByCuratedRows,
   pickTemplatesByIdOrder,
   getVariantsForTemplateId,
-  resolveModelByQuality,
   resolvePromptForType,
-  toLibraryObjectKey,
 } from '../utils/libraryPageUtils'
-
-const generationType: 'one_to_one' = 'one_to_one'
 
 /** Собирает state, вычисления и обработчики для экрана библиотеки. */
 export function useLibraryPage() {
@@ -507,19 +503,15 @@ export function useLibraryPage() {
       if (manifestRecord) {
         setManifestData(manifestRecord)
       }
-      const promptToSend = resolvePromptForType(manifestRecord, generationType)
-      const selectedModel = resolveModelByQuality(quality)
+      const promptToSend = resolvePromptForType(manifestRecord)
       const generationJob = await libraryApi.generateFromTemplate({
-        generation_type: generationType,
         quality,
-        model: selectedModel,
+        model: GEMINI_GENERATION_IMAGE_MODEL,
         aspect_ratio: aspectRatio,
         template_id: selectedTemplate.id,
         manifest_path: selectedTemplate.manifest,
         selected_prompt: promptToSend,
         user_photo_object_key: completed.object_key,
-        template_photo_object_key:
-          generationType === 'one_to_one' ? toLibraryObjectKey(selectedTemplate.image) : undefined,
       })
       setIsGenerateModalOpen(false)
       navigate('/app/photos', {

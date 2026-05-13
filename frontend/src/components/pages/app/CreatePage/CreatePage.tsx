@@ -75,11 +75,9 @@ function CreatePage() {
         onAspectRatioChange={p.setOwnTemplateAspect}
         selectedPhotoPreviewUrl={p.ownTemplatePhotoPreview}
         onPhotoSelect={p.handleOwnTemplatePhotoSelect}
-        selectedTemplatePreviewUrl={p.ownTemplateRefPreview}
-        onTemplateSelect={p.handleOwnTemplateRefSelect}
         prompt={p.ownTemplatePrompt}
         onPromptChange={p.setOwnTemplatePrompt}
-        canSubmit={Boolean(p.ownTemplatePhotoFile && p.ownTemplateRefFile)}
+        canSubmit={Boolean(p.ownTemplatePhotoFile)}
         isSubmitting={p.ownTemplateSubmitting}
         onClose={p.handleCloseOwnTemplateModal}
         onSubmit={() => void p.handleSubmitOwnTemplate()}

@@ -40,8 +40,8 @@ export function CreatePageActionGrid({
         <button type="button" className="create-card create-card--3" onClick={onByMyTemplate}>
           <LayoutTemplate size={18} strokeWidth={1.5} aria-hidden />
           <div className="create-card__text">
-            <span className="create-card__title">По моему шаблону</span>
-            <span className="create-card__desc">Сохранённый образ</span>
+            <span className="create-card__title">Свой сценарий</span>
+            <span className="create-card__desc">Фото и описание</span>
           </div>
         </button>
 

@@ -109,7 +109,6 @@ async function mapWithConcurrencyLimit<T, R>(
 }
 
 export interface TemplateManifest {
-  one_to_one_prompt?: string
   prompt?: string
   prompts?: string[]
   [key: string]: unknown
@@ -131,27 +130,28 @@ export interface UploadCompleteApiResponse {
   created_at: string
 }
 
+/** Единственная модель OpenRouter для генерации; качество картинки задаётся полем quality (1K / 2K на бэкенде). */
+export const GEMINI_GENERATION_IMAGE_MODEL = 'google/gemini-3-pro-image-preview' as const
+
+export type GeminiGenerationImageModel = typeof GEMINI_GENERATION_IMAGE_MODEL
+
 export interface GenerateFromTemplateRequest {
-  generation_type: 'one_to_one' | 'similar'
   quality: 'standard' | 'pro'
-  model: 'google/gemini-3-pro-image-preview' | 'flux 2 pro'
+  model: GeminiGenerationImageModel
   aspect_ratio: '9:16' | '1:1' | '4:5' | '16:9'
   template_id: string
   manifest_path: string
   selected_prompt: string
   user_photo_object_key: string
-  template_photo_object_key?: string
 }
 
 export interface GenerateFromTemplateResponse {
   request_id: string
-  generation_type: 'one_to_one' | 'similar'
   status: 'queued' | 'processing' | 'done' | 'failed'
 }
 
 export interface GenerateFromTemplateStatusResponse {
   request_id: string
-  generation_type: 'one_to_one' | 'similar'
   status: 'queued' | 'processing' | 'done' | 'failed'
   result_object_key: string | null
   result_view_url: string | null
@@ -166,14 +166,6 @@ export const CREATE_FLOW_MANIFEST_PLACEHOLDER = 'create/flow/selfio'
 /** Текст сцены по умолчанию, если пользователь не ввёл промт (Nano Banana на бэкенде). */
 export const NANO_BANANA_DEFAULT_SCENE_PROMPT =
   'Сохранить естественный вид, аккуратно перенести стиль и пожелания из описания.'
-
-/** Возвращает имя модели для поля запроса генерации в зависимости от качества UI. */
-export function resolveGenerationModelForQuality(
-  quality: 'standard' | 'pro',
-): 'google/gemini-3-pro-image-preview' | 'flux 2 pro' {
-  if (quality === 'pro') return 'flux 2 pro'
-  return 'google/gemini-3-pro-image-preview'
-}
 
 /** Приводит index_path из JSON к строке (в index.json иногда приходит число без кавычек). */
 function normalizeCategoryIndexPath(value: unknown): string {

@@ -64,31 +64,16 @@ export function composeSearchItems(exact: Template | null, similar: Template[]):
   return out
 }
 
-/** Возвращает модель OpenRouter на основе выбранного качества генерации. */
-export function resolveModelByQuality(
-  quality: 'standard' | 'pro',
-): 'google/gemini-3-pro-image-preview' | 'flux 2 pro' {
-  if (quality === 'pro') return 'flux 2 pro'
-  return 'google/gemini-3-pro-image-preview'
-}
-
 /** Возвращает ключ S3 для шаблонной картинки на основе относительного пути из индекса. */
 export function toLibraryObjectKey(imagePath: string): string {
   const normalized = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath
   return normalized.startsWith('S3_selfio/library/') ? normalized : `S3_selfio/library/${normalized}`
 }
 
-/** Возвращает промт из manifest для выбранного типа генерации с безопасным fallback. */
-export function resolvePromptForType(
-  manifest: Record<string, unknown> | null,
-  generationType: 'one_to_one' | 'similar',
-): string {
+/** Возвращает текст сцены из manifest для генерации (prompt / prompts). */
+export function resolvePromptForType(manifest: Record<string, unknown> | null): string {
   if (!manifest) return DEFAULT_PROMPT
-  const oneToOne = manifest['one_to_one_prompt']
   const basePrompt = manifest['prompt']
-  if (generationType === 'one_to_one' && typeof oneToOne === 'string' && oneToOne.trim()) {
-    return oneToOne.trim()
-  }
   if (typeof basePrompt === 'string' && basePrompt.trim()) {
     return basePrompt.trim()
   }
@@ -96,9 +81,6 @@ export function resolvePromptForType(
   if (Array.isArray(prompts)) {
     const first = prompts.find((item): item is string => typeof item === 'string' && item.trim().length > 0)
     if (first) return first.trim()
-  }
-  if (typeof oneToOne === 'string' && oneToOne.trim()) {
-    return oneToOne.trim()
   }
   return DEFAULT_PROMPT
 }

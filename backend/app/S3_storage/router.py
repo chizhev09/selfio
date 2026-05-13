@@ -45,7 +45,7 @@ from app.S3_storage.schemas import (
     UserPhotoItem,
 )
 from app.S3_storage.paths import user_result_generation_prefix
-from app.services.openrouter_image import generate_image_with_openrouter
+from app.services.openrouter_image import generate_image_with_openrouter, normalize_openrouter_model_id
 
 router = APIRouter(prefix="/storage", tags=["storage"])
 
@@ -631,14 +631,6 @@ def _photo_item(photo: UserPhoto, view_url: str) -> UserPhotoItem:
     )
 
 
-def _resolve_effective_model_for_quality(quality: str) -> str:
-    """Выбирает модель по качеству: pro отправляет в Flux 2 Pro, standard — в Gemini."""
-    normalized = quality.strip().lower()
-    if normalized == "pro":
-        return "flux 2 pro"
-    return "google/gemini-3-pro-image-preview"
-
-
 def _token_cost_for_quality(quality: str) -> int:
     """Возвращает стоимость генерации в токенах: 20 за pro, 10 за остальное (как на фронте)."""
     if quality.strip().lower() == "pro":
@@ -678,15 +670,7 @@ async def _process_generation_request(generation_id: uuid.UUID) -> None:
 
             input_image_urls: list[str] = []
             user_photo_data_url = await asyncio.to_thread(_build_input_data_url, row.user_photo_object_key)
-            if row.generation_type == "one_to_one" and row.template_photo_object_key:
-                template_photo_data_url = await asyncio.to_thread(
-                    _build_input_data_url, row.template_photo_object_key
-                )
-                # В one-to-one первым даём user (identity), вторым template (база сцены).
-                input_image_urls.append(user_photo_data_url)
-                input_image_urls.append(template_photo_data_url)
-            else:
-                input_image_urls.append(user_photo_data_url)
+            input_image_urls.append(user_photo_data_url)
 
             image_bytes, ext = await generate_image_with_openrouter(
                 model=row.model,
@@ -1007,15 +991,13 @@ async def generate_from_template(
 
     row = GenerationRequest(
         user_id=user.id,
-        generation_type=body.generation_type,
         quality=body.quality,
         aspect_ratio=body.aspect_ratio,
-        model=_resolve_effective_model_for_quality(body.quality),
+        model=normalize_openrouter_model_id(body.model),
         template_id=body.template_id,
         manifest_path=body.manifest_path,
         selected_prompt=body.selected_prompt,
         user_photo_object_key=body.user_photo_object_key,
-        template_photo_object_key=body.template_photo_object_key,
         status="queued",
     )
     db.add(row)
@@ -1025,7 +1007,6 @@ async def generate_from_template(
 
     return GenerateFromTemplateResponse(
         request_id=str(row.id),
-        generation_type=row.generation_type,
         status=row.status,
     )
 
@@ -1054,7 +1035,6 @@ async def get_generate_from_template_status(
 
     return GenerationStatusResponse(
         request_id=str(row.id),
-        generation_type=row.generation_type,
         status=row.status,
         result_object_key=row.result_object_key,
         result_view_url=result_view_url,

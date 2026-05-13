@@ -14,6 +14,13 @@ from app.core.config import get_settings
 OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_MAX_RETRIES = 4
 NANO_BANANA_MODEL = "google/gemini-3-pro-image-preview"
+
+
+def normalize_openrouter_model_id(_legacy_model: str) -> str:
+    """Возвращает единственный id модели картинки на OpenRouter (Gemini); аргумент не используется, очередь со старыми БД не ломается."""
+    return NANO_BANANA_MODEL
+
+
 NANO_BANANA_PROMPT_TEMPLATE = """TASK:
 Place the person from the reference image into a new scene, preserving a strong and recognizable likeness while naturally adapting them to the environment.
 
@@ -71,7 +78,7 @@ def _resolve_nano_banana_aspect_ratio(aspect_ratio: str) -> str:
 
 
 def _resolve_nano_banana_image_size(quality: str) -> str:
-    """Преобразует режим качества окна генерации в размер Nano Banana."""
+    """Ставит размер выхода Gemini: standard → 1K, pro → 2K."""
     return "2K" if quality.strip().lower() == "pro" else "1K"
 
 
@@ -237,14 +244,6 @@ async def _download_image_by_url(url: str) -> tuple[bytes, str]:
     return response.content, extension
 
 
-def _resolve_modalities_for_model(model: str) -> list[str]:
-    """Подбирает modalities под модель: Gemini ожидает и image, и text."""
-    normalized = model.strip().lower()
-    if normalized.startswith("google/gemini-"):
-        return ["image", "text"]
-    return ["image"]
-
-
 def _extract_data_url_from_text(text: str) -> str | None:
     """Ищет data:image URL внутри текстового поля ответа."""
     match = re.search(r"(data:image/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=\s]+)", text)
@@ -317,15 +316,15 @@ async def generate_image_with_openrouter(
             detail="Для Nano Banana нужно фото пользователя (input_image_urls[0]).",
         )
     message_content: list[dict[str, Any]] = []
-    # Первое изображение — личность пользователя, второе (если есть) — референс сцены/шаблона.
-    for url in image_urls[:2]:
+    # Одно входное изображение — фото пользователя (data URL из S3).
+    for url in image_urls[:1]:
         message_content.append({"type": "image_url", "image_url": {"url": url}})
     message_content.append({"type": "text", "text": _build_nano_banana_prompt(prompt)})
 
     resolved_aspect_ratio = _resolve_nano_banana_aspect_ratio(aspect_ratio)
     resolved_image_size = _resolve_nano_banana_image_size(quality)
-    request_payload = {
-        "model": NANO_BANANA_MODEL,
+    request_payload: dict[str, Any] = {
+        "model": normalize_openrouter_model_id(model),
         "messages": [{"role": "user", "content": message_content}],
         "modalities": ["image", "text"],
         "image_config": {

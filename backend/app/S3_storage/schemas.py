@@ -131,24 +131,15 @@ class HeroCarouselResponse(BaseModel):
 
 
 class GenerateFromTemplateRequest(BaseModel):
-    """Запрос на генерацию по шаблону с выбранным промтом и ключами входных изображений."""
+    """Запрос на генерацию по шаблону: одно фото пользователя, промт и параметры вывода."""
 
-    generation_type: str = Field(..., pattern="^(one_to_one|similar)$")
     quality: str = Field(default="standard", min_length=1, max_length=32)
     aspect_ratio: str = Field(default="9:16", min_length=1, max_length=16)
-    model: Literal[
-        "google/gemini-3-pro-image-preview",
-        "google/gemini-2.5-flash-image",
-        "flux 2 pro",
-        "flux 2 max",
-        "black-forest-labs/flux.2-pro",
-        "black-forest-labs/flux.2-max",
-    ] = "google/gemini-3-pro-image-preview"
+    model: Literal["google/gemini-3-pro-image-preview"] = "google/gemini-3-pro-image-preview"
     template_id: str = Field(..., min_length=1, max_length=120)
     manifest_path: str = Field(..., min_length=1, max_length=512)
     selected_prompt: str = Field(..., min_length=1)
     user_photo_object_key: str = Field(..., min_length=8, max_length=512)
-    template_photo_object_key: str | None = Field(default=None, max_length=512)
 
     @field_validator("template_id", mode="before")
     @classmethod
@@ -168,7 +159,6 @@ class GenerateFromTemplateResponse(BaseModel):
     """Результат создания async-задачи генерации."""
 
     request_id: str
-    generation_type: str
     status: Literal["queued", "processing", "done", "failed"]
 
 
@@ -176,7 +166,6 @@ class GenerationStatusResponse(BaseModel):
     """Текущее состояние задачи генерации и данные результата."""
 
     request_id: str
-    generation_type: str
     status: Literal["queued", "processing", "done", "failed"]
     result_object_key: str | None = None
     result_view_url: str | None = None

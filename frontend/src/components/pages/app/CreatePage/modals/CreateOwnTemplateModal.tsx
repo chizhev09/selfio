@@ -1,4 +1,4 @@
-// Модалка генерации на экране «Создать»: как в библиотеке, но справа пользователь прикрепляет свой шаблон-картинку.
+// Модалка на экране «Создать»: одно фото пользователя, текст сценария, качество и формат (без второго референса).
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Plus, X } from 'lucide-react'
@@ -23,18 +23,16 @@ interface CreateOwnTemplateModalProps {
   onAspectRatioChange: (value: GenerationAspectRatio) => void
   selectedPhotoPreviewUrl: string | null
   onPhotoSelect: (file: File | null) => void
-  selectedTemplatePreviewUrl: string | null
-  onTemplateSelect: (file: File | null) => void
   prompt: string
   onPromptChange: (value: string) => void
-  /** false, пока не выбраны оба изображения — кнопка отправки неактивна. */
+  /** false, пока не выбрано фото — кнопка отправки неактивна. */
   canSubmit: boolean
   isSubmitting: boolean
   onClose: () => void
   onSubmit: () => void
 }
 
-/** Рендерит нижний sheet: фото слева, свой шаблон справа, качество и формат как в библиотеке. */
+/** Рендерит нижний sheet: фото, промт сценария, качество и формат. */
 export function CreateOwnTemplateModal({
   isOpen,
   quality,
@@ -45,8 +43,6 @@ export function CreateOwnTemplateModal({
   onAspectRatioChange,
   selectedPhotoPreviewUrl,
   onPhotoSelect,
-  selectedTemplatePreviewUrl,
-  onTemplateSelect,
   prompt,
   onPromptChange,
   canSubmit,
@@ -56,7 +52,6 @@ export function CreateOwnTemplateModal({
 }: CreateOwnTemplateModalProps) {
   const [openedHint, setOpenedHint] = useState<'quality' | null>(null)
   const photoInputRef = useRef<HTMLInputElement | null>(null)
-  const templateInputRef = useRef<HTMLInputElement | null>(null)
   const generationCost =
     quality === 'pro' ? PROFILE_TOP_UP_TOKENS_PER_PRO_GEN : PROFILE_TOP_UP_TOKENS_PER_REGULAR_GEN
 
@@ -73,11 +68,6 @@ export function CreateOwnTemplateModal({
     photoInputRef.current?.click()
   }
 
-  /** Открывает выбор файла для референса шаблона. */
-  function handleOpenTemplateDialog() {
-    templateInputRef.current?.click()
-  }
-
   /** Пробрасывает выбранное фото наружу и сбрасывает input для повторного выбора. */
   function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null
@@ -85,14 +75,7 @@ export function CreateOwnTemplateModal({
     event.currentTarget.value = ''
   }
 
-  /** Пробрасывает выбранный шаблон наружу и сбрасывает input для повторного выбора. */
-  function handleTemplateChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null
-    onTemplateSelect(file)
-    event.currentTarget.value = ''
-  }
-
-  /** Показывает или скрывает текст подсказки по качеству. */
+  /** Показывает или скрывает текст подсказки по секции модалки. */
   function handleToggleHint(hint: 'quality') {
     setOpenedHint((prev) => (prev === hint ? null : hint))
   }
@@ -119,16 +102,16 @@ export function CreateOwnTemplateModal({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0.4 }}
             transition={{ type: 'spring', stiffness: 280, damping: 30, mass: 0.8 }}
-            aria-label="Модальное окно генерации по вашему шаблону"
+            aria-label="Модальное окно генерации по вашему описанию"
           >
             <header className="generation-modal__header">
               <button type="button" className="generation-modal__close" onClick={onClose} aria-label="Закрыть">
                 <X size={18} />
               </button>
               <div className="generation-modal__title-wrap">
-                <h3>Генерация по вашему шаблону</h3>
+                <h3>Свой сценарий</h3>
                 <p className="generation-modal__subtitle">
-                  Фото слева, референс шаблона справа. Чёткий свет, лицо без масок — так результат стабильнее.
+                  Одно фото и текст: что хотите видеть в кадре. Чёткий свет и лицо без масок дают стабильнее результат.
                 </p>
               </div>
             </header>
@@ -156,35 +139,6 @@ export function CreateOwnTemplateModal({
                   )}
                 </button>
               </div>
-              <div className="generation-modal__media-divider" aria-hidden="true">
-                <X size={14} />
-              </div>
-              <div className="generation-modal__media-col">
-                <span className="generation-modal__media-label">Ваш шаблон</span>
-                <input
-                  ref={templateInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="generation-modal__media-file-input"
-                  onChange={handleTemplateChange}
-                />
-                <button
-                  type="button"
-                  className="generation-modal__media-input"
-                  aria-label="Прикрепить изображение шаблона"
-                  onClick={handleOpenTemplateDialog}
-                >
-                  {selectedTemplatePreviewUrl ? (
-                    <img
-                      src={selectedTemplatePreviewUrl}
-                      alt="Предпросмотр шаблона"
-                      className="generation-modal__picked-preview"
-                    />
-                  ) : (
-                    <Plus size={18} strokeWidth={1.75} />
-                  )}
-                </button>
-              </div>
             </div>
 
             <div className="create-own-modal__prompt">
@@ -196,7 +150,7 @@ export function CreateOwnTemplateModal({
                 className="create-own-modal__prompt-input"
                 value={prompt}
                 onChange={handlePromptInput}
-                placeholder="Как перенести стиль, что оставить на лице…"
+                placeholder="Опишите сцену, свет, настроение; можно оставить пустым — подставится нейтральный текст."
                 rows={3}
                 autoComplete="off"
               />
@@ -219,7 +173,7 @@ export function CreateOwnTemplateModal({
               </div>
               {openedHint === 'quality' ? (
                 <p className="generation-modal__hint-text">
-                  Standard быстрее и экономнее, Pro даёт более детализированный и аккуратный результат.
+                  Standard — разрешение 1K (Gemini), быстрее и экономнее. Pro — 2K (та же модель), выше детализация.
                 </p>
               ) : null}
               <div className="generation-modal__options-row">

@@ -1,4 +1,4 @@
-# Асинхронные задачи генерации: статус, модель, вход и ссылка на сохранённый результат.
+# Асинхронные задачи генерации: статус, модель, одно входное фото пользователя и ссылка на результат.
 import uuid
 from datetime import datetime
 
@@ -21,7 +21,6 @@ class GenerationRequest(Base):
         nullable=False,
         index=True,
     )
-    generation_type: Mapped[str] = mapped_column(String(24), nullable=False)
     quality: Mapped[str] = mapped_column(String(24), nullable=False)
     aspect_ratio: Mapped[str] = mapped_column(String(16), nullable=False, default="9:16")
     model: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -29,7 +28,6 @@ class GenerationRequest(Base):
     manifest_path: Mapped[str] = mapped_column(String(512), nullable=False)
     selected_prompt: Mapped[str] = mapped_column(Text, nullable=False)
     user_photo_object_key: Mapped[str] = mapped_column(String(512), nullable=False)
-    template_photo_object_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
     status: Mapped[str] = mapped_column(String(24), nullable=False, default="queued")
     result_object_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)

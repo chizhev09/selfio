@@ -6,9 +6,9 @@ import {
   CREATE_FLOW_MANIFEST_PLACEHOLDER,
   CREATE_FLOW_OWN_TEMPLATE_ID,
   CREATE_FLOW_PROMPT_TEMPLATE_ID,
+  GEMINI_GENERATION_IMAGE_MODEL,
   libraryApi,
   NANO_BANANA_DEFAULT_SCENE_PROMPT,
-  resolveGenerationModelForQuality,
 } from '../../LibraryPage/services/libraryApi'
 import type { OwnTemplateAspectRatio } from '../types/createPage.types'
 
@@ -19,8 +19,6 @@ export function useCreatePage() {
   const [isOwnTemplateModalOpen, setIsOwnTemplateModalOpen] = useState(false)
   const [ownTemplatePhotoFile, setOwnTemplatePhotoFile] = useState<File | null>(null)
   const [ownTemplatePhotoPreview, setOwnTemplatePhotoPreview] = useState<string | null>(null)
-  const [ownTemplateRefFile, setOwnTemplateRefFile] = useState<File | null>(null)
-  const [ownTemplateRefPreview, setOwnTemplateRefPreview] = useState<string | null>(null)
   const [ownTemplateQuality, setOwnTemplateQuality] = useState<'standard' | 'pro'>('standard')
   const [ownTemplateAspect, setOwnTemplateAspect] = useState<OwnTemplateAspectRatio>('9:16')
   const [ownTemplatePrompt, setOwnTemplatePrompt] = useState('')
@@ -37,22 +35,13 @@ export function useCreatePage() {
   const [isQuickRandomModalOpen, setIsQuickRandomModalOpen] = useState(false)
 
   useEffect(() => {
-    /** Снимает blob-URL превью фото «свой шаблон» при смене или размонтировании. */
+    /** Снимает blob-URL превью фото «свой сценарий» при смене или размонтировании. */
     return () => {
       if (ownTemplatePhotoPreview) {
         URL.revokeObjectURL(ownTemplatePhotoPreview)
       }
     }
   }, [ownTemplatePhotoPreview])
-
-  useEffect(() => {
-    /** Снимает blob-URL превью референса шаблона при смене или размонтировании. */
-    return () => {
-      if (ownTemplateRefPreview) {
-        URL.revokeObjectURL(ownTemplateRefPreview)
-      }
-    }
-  }, [ownTemplateRefPreview])
 
   useEffect(() => {
     /** Снимает blob-URL превью фото «по промту» при смене или размонтировании. */
@@ -98,9 +87,8 @@ export function useCreatePage() {
     try {
       const userKey = await libraryApi.uploadUserPhotoFile(promptFlowPhotoFile)
       const generationJob = await libraryApi.generateFromTemplate({
-        generation_type: 'one_to_one',
         quality: promptFlowQuality,
-        model: resolveGenerationModelForQuality(promptFlowQuality),
+        model: GEMINI_GENERATION_IMAGE_MODEL,
         aspect_ratio: promptFlowAspect,
         template_id: CREATE_FLOW_PROMPT_TEMPLATE_ID,
         manifest_path: CREATE_FLOW_MANIFEST_PLACEHOLDER,
@@ -123,7 +111,7 @@ export function useCreatePage() {
     navigate('/app/library')
   }
 
-  /** Сохраняет фото пользователя для модалки «по своему шаблону» и обновляет превью. */
+  /** Сохраняет фото пользователя для модалки «свой сценарий» и обновляет превью. */
   const handleOwnTemplatePhotoSelect = (file: File | null) => {
     if (ownTemplatePhotoPreview) {
       URL.revokeObjectURL(ownTemplatePhotoPreview)
@@ -137,53 +125,35 @@ export function useCreatePage() {
     setOwnTemplatePhotoPreview(URL.createObjectURL(file))
   }
 
-  /** Сохраняет файл шаблона (референс) и обновляет превью справа в модалке. */
-  const handleOwnTemplateRefSelect = (file: File | null) => {
-    if (ownTemplateRefPreview) {
-      URL.revokeObjectURL(ownTemplateRefPreview)
-    }
-    if (!file) {
-      setOwnTemplateRefFile(null)
-      setOwnTemplateRefPreview(null)
-      return
-    }
-    setOwnTemplateRefFile(file)
-    setOwnTemplateRefPreview(URL.createObjectURL(file))
-  }
-
   /** Закрывает модалку и сбрасывает выбранные файлы и промт. */
   const handleCloseOwnTemplateModal = () => {
     handleOwnTemplatePhotoSelect(null)
-    handleOwnTemplateRefSelect(null)
     setOwnTemplatePrompt('')
     setIsOwnTemplateModalOpen(false)
   }
 
-  /** Открывает модалку генерации с пользовательским шаблоном. */
+  /** Открывает модалку генерации по своему тексту и одному фото. */
   const handleByMyTemplate = () => {
     setIsOwnTemplateModalOpen(true)
   }
 
-  /** Два upload в user_photo и генерация one_to_one с референсом шаблона (Nano Banana). */
+  /** Загружает фото пользователя и ставит задачу с текстом сценария (без второго изображения). */
   const handleSubmitOwnTemplate = async () => {
-    if (!ownTemplatePhotoFile || !ownTemplateRefFile) {
+    if (!ownTemplatePhotoFile) {
       return
     }
     setOwnTemplateSubmitting(true)
     try {
       const userKey = await libraryApi.uploadUserPhotoFile(ownTemplatePhotoFile)
-      const templateKey = await libraryApi.uploadUserPhotoFile(ownTemplateRefFile)
       const promptText = ownTemplatePrompt.trim() || NANO_BANANA_DEFAULT_SCENE_PROMPT
       const generationJob = await libraryApi.generateFromTemplate({
-        generation_type: 'one_to_one',
         quality: ownTemplateQuality,
-        model: resolveGenerationModelForQuality(ownTemplateQuality),
+        model: GEMINI_GENERATION_IMAGE_MODEL,
         aspect_ratio: ownTemplateAspect,
         template_id: CREATE_FLOW_OWN_TEMPLATE_ID,
         manifest_path: CREATE_FLOW_MANIFEST_PLACEHOLDER,
         selected_prompt: promptText,
         user_photo_object_key: userKey,
-        template_photo_object_key: templateKey,
       })
       navigate('/app/photos', {
         state: { pendingGeneration: { requestId: generationJob.request_id } },
@@ -211,8 +181,6 @@ export function useCreatePage() {
     setIsOwnTemplateModalOpen,
     ownTemplatePhotoFile,
     ownTemplatePhotoPreview,
-    ownTemplateRefFile,
-    ownTemplateRefPreview,
     ownTemplateQuality,
     setOwnTemplateQuality,
     ownTemplateAspect,
@@ -238,7 +206,6 @@ export function useCreatePage() {
     handleSubmitPromptFlow,
     handleChooseTemplate,
     handleOwnTemplatePhotoSelect,
-    handleOwnTemplateRefSelect,
     handleCloseOwnTemplateModal,
     handleByMyTemplate,
     handleSubmitOwnTemplate,

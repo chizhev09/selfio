@@ -45,7 +45,7 @@ function withSwappedImageExtensionCase(url: string): string | null {
   return null
 }
 
-/** Рендерит модальное окно генерации с типом, качеством и предпросмотром шаблона. */
+/** Рендерит модальное окно генерации с качеством, форматом и предпросмотром шаблона. */
 export function GenerateModal({
   isOpen,
   templateTitle,
@@ -226,7 +226,7 @@ export function GenerateModal({
               </div>
               {openedHint === 'quality' ? (
                 <p className="generation-modal__hint-text">
-                  Standard быстрее и экономнее, Pro даёт более детализированный и аккуратный результат.
+                  Standard — разрешение 1K (Gemini), быстрее и экономнее. Pro — 2K (та же модель), выше детализация.
                 </p>
               ) : null}
               <div className="generation-modal__options-row">

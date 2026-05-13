@@ -4,12 +4,12 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { GenerateModal } from '../../LibraryPage/modalWindows/GenerateModal'
-import { libraryApi, humanizeGenerationUiError, resolveGenerationModelForQuality } from '../../LibraryPage/services/libraryApi'
+import { libraryApi, humanizeGenerationUiError, GEMINI_GENERATION_IMAGE_MODEL } from '../../LibraryPage/services/libraryApi'
 import type { Template } from '../../LibraryPage/types/library'
+import { resolvePromptForType } from '../../LibraryPage/utils/libraryPageUtils'
 import '../../LibraryPage/modalWindows/GenerateModal.css'
 import './CreateQuickRandomModal.css'
 
-const DEFAULT_PROMPT = 'Сохранить естественный вид, аккуратно перенести стиль шаблона.'
 type GenerationAspectRatio = '9:16' | '1:1' | '4:5' | '16:9'
 
 interface CreateQuickRandomModalProps {
@@ -21,34 +21,6 @@ interface CreateQuickRandomModalProps {
   onClose: () => void
 }
 
-/** Собирает ключ объекта S3 для картинки шаблона. */
-function toLibraryObjectKey(imagePath: string): string {
-  const normalized = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath
-  return normalized.startsWith('S3_selfio/library/') ? normalized : `S3_selfio/library/${normalized}`
-}
-
-/** Достаёт текст промта из manifest с запасным вариантом. */
-function resolvePromptForType(manifest: Record<string, unknown> | null, generationType: 'one_to_one' | 'similar'): string {
-  if (!manifest) return DEFAULT_PROMPT
-  const oneToOne = manifest['one_to_one_prompt']
-  const basePrompt = manifest['prompt']
-  if (generationType === 'one_to_one' && typeof oneToOne === 'string' && oneToOne.trim()) {
-    return oneToOne.trim()
-  }
-  if (typeof basePrompt === 'string' && basePrompt.trim()) {
-    return basePrompt.trim()
-  }
-  const prompts = manifest['prompts']
-  if (Array.isArray(prompts)) {
-    const first = prompts.find((item): item is string => typeof item === 'string' && item.trim().length > 0)
-    if (first) return first.trim()
-  }
-  if (typeof oneToOne === 'string' && oneToOne.trim()) {
-    return oneToOne.trim()
-  }
-  return DEFAULT_PROMPT
-}
-
 /** Обёртка: подбор случайного шаблона, затем стандартная модалка генерации. */
 export function CreateQuickRandomModal({
   isOpen,
@@ -58,7 +30,6 @@ export function CreateQuickRandomModal({
   onClose,
 }: CreateQuickRandomModalProps) {
   const navigate = useNavigate()
-  const generationType: 'one_to_one' = 'one_to_one'
 
   const [pickLoading, setPickLoading] = useState(false)
   const [pickError, setPickError] = useState<string | null>(null)
@@ -204,17 +175,15 @@ export function CreateQuickRandomModal({
       if (manifestRecord) {
         setManifestData(manifestRecord)
       }
-      const promptToSend = resolvePromptForType(manifestRecord, generationType)
+      const promptToSend = resolvePromptForType(manifestRecord)
       const generationJob = await libraryApi.generateFromTemplate({
-        generation_type: generationType,
         quality,
-        model: resolveGenerationModelForQuality(quality),
+        model: GEMINI_GENERATION_IMAGE_MODEL,
         aspect_ratio: aspectRatio,
         template_id: randomTemplate.id,
         manifest_path: randomTemplate.manifest,
         selected_prompt: promptToSend,
         user_photo_object_key: userKey,
-        template_photo_object_key: generationType === 'one_to_one' ? toLibraryObjectKey(randomTemplate.image) : undefined,
       })
       navigate('/app/photos', {
         state: {

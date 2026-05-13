@@ -6,19 +6,11 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useUserTokenBalance } from '../../../../hooks/useUserTokenBalance'
 import { SearchResultsGrid } from './components/SearchResultsGrid'
 import { GenerateModal } from './modalWindows/GenerateModal'
-import { libraryApi, humanizeGenerationUiError } from './services/libraryApi'
+import { libraryApi, humanizeGenerationUiError, GEMINI_GENERATION_IMAGE_MODEL } from './services/libraryApi'
 import type { Template } from './types/library'
+import { resolvePromptForType } from './utils/libraryPageUtils'
 import './TemplateDetailsPage.css'
-const DEFAULT_PROMPT = 'Сохранить естественный вид, аккуратно перенести стиль шаблона.'
 type GenerationAspectRatio = '9:16' | '1:1' | '4:5' | '16:9'
-
-/** Возвращает модель OpenRouter на основе выбранного качества генерации. */
-function resolveModelByQuality(
-  quality: 'standard' | 'pro',
-): 'google/gemini-3-pro-image-preview' | 'flux 2 pro' {
-  if (quality === 'pro') return 'flux 2 pro'
-  return 'google/gemini-3-pro-image-preview'
-}
 
 /** Возвращает альтернативный URL, если в S3 отличается регистр расширения файла. */
 function withSwappedImageExtensionCase(url: string): string | null {
@@ -33,34 +25,6 @@ function withSwappedImageExtensionCase(url: string): string | null {
   return null
 }
 
-/** Возвращает ключ S3 для шаблонной картинки на основе относительного пути из индекса. */
-function toLibraryObjectKey(imagePath: string): string {
-  const normalized = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath
-  return normalized.startsWith('S3_selfio/library/') ? normalized : `S3_selfio/library/${normalized}`
-}
-
-/** Возвращает промт из manifest для выбранного типа генерации с безопасным fallback. */
-function resolvePromptForType(manifest: Record<string, unknown> | null, generationType: 'one_to_one' | 'similar'): string {
-  if (!manifest) return DEFAULT_PROMPT
-  const oneToOne = manifest['one_to_one_prompt']
-  const basePrompt = manifest['prompt']
-  if (generationType === 'one_to_one' && typeof oneToOne === 'string' && oneToOne.trim()) {
-    return oneToOne.trim()
-  }
-  if (typeof basePrompt === 'string' && basePrompt.trim()) {
-    return basePrompt.trim()
-  }
-  const prompts = manifest['prompts']
-  if (Array.isArray(prompts)) {
-    const first = prompts.find((item): item is string => typeof item === 'string' && item.trim().length > 0)
-    if (first) return first.trim()
-  }
-  if (typeof oneToOne === 'string' && oneToOne.trim()) {
-    return oneToOne.trim()
-  }
-  return DEFAULT_PROMPT
-}
-
 /** Рендерит экран детали шаблона с hero-фото, действиями и похожими карточками. */
 function TemplateDetailsPage() {
   const navigate = useNavigate()
@@ -73,7 +37,6 @@ function TemplateDetailsPage() {
   const [generationError, setGenerationError] = useState<string | null>(null)
   const [isFavorite, setIsFavorite] = useState(false)
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false)
-  const generationType: 'one_to_one' = 'one_to_one'
   const [quality, setQuality] = useState<'standard' | 'pro'>('standard')
   const [aspectRatio, setAspectRatio] = useState<GenerationAspectRatio>('9:16')
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null)
@@ -243,18 +206,15 @@ function TemplateDetailsPage() {
       if (manifestRecord) {
         setManifestData(manifestRecord)
       }
-      const promptToSend = resolvePromptForType(manifestRecord, generationType)
-      const selectedModel = resolveModelByQuality(quality)
+      const promptToSend = resolvePromptForType(manifestRecord)
       const generationJob = await libraryApi.generateFromTemplate({
-        generation_type: generationType,
         quality,
-        model: selectedModel,
+        model: GEMINI_GENERATION_IMAGE_MODEL,
         aspect_ratio: aspectRatio,
         template_id: template.id,
         manifest_path: template.manifest,
         selected_prompt: promptToSend,
         user_photo_object_key: completed.object_key,
-        template_photo_object_key: generationType === 'one_to_one' ? toLibraryObjectKey(template.image) : undefined,
       })
       navigate('/app/photos', {
         state: {
