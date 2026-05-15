@@ -1,4 +1,5 @@
 // Поэтапная фоновая подгрузка лендинга: сначала hero, затем авторизация, затем блок библиотеки.
+// На медленной сети (LTE/3G, «Экономия трафика») не забиваем канал десятками webp.
 
 export type LandingPrefetchHandlers = {
   /** Карусель под героем готова к показу. */
@@ -19,6 +20,24 @@ function runWhenIdle(task: () => void | Promise<void>, timeoutMs = 3500): void {
   } else {
     window.setTimeout(run, 1200)
   }
+}
+
+type NetworkInformationLike = {
+  saveData?: boolean
+  effectiveType?: string
+}
+
+/** true на 2G/3G или при включённой экономии трафика — не грузим лишнее в фоне. */
+function isSlowConnection(): boolean {
+  const conn = (navigator as Navigator & { connection?: NetworkInformationLike }).connection
+  if (!conn) {
+    return false
+  }
+  if (conn.saveData) {
+    return true
+  }
+  const type = conn.effectiveType
+  return type === 'slow-2g' || type === '2g' || type === '3g'
 }
 
 /** Пауза между этапами фоновой загрузки. */
@@ -71,25 +90,41 @@ export function scheduleLandingBackgroundLoads(
 ): () => void {
   let cancelled = false
 
-  runWhenIdle(async () => {
-    await delay(400)
-    if (cancelled) return
-    await prefetchHeroCarousel()
-    if (cancelled) return
-    handlers.onCarouselReady?.()
+  const slow = isSlowConnection()
+  const stepDelay = slow ? 2500 : 500
+  const idleTimeout = slow ? 8000 : 3500
 
-    await delay(500)
-    if (cancelled) return
-    await prefetchAuthModal()
-    if (cancelled) return
-    handlers.onAuthReady?.()
+  runWhenIdle(
+    async () => {
+      await delay(slow ? 1200 : 400)
+      if (cancelled) return
+      await prefetchHeroCarousel()
+      if (cancelled) return
+      handlers.onCarouselReady?.()
 
-    await delay(500)
-    if (cancelled) return
-    await prefetchLandingLibrarySection()
-    if (cancelled) return
-    handlers.onLibraryReady?.()
-  })
+      if (slow) {
+        await delay(3000)
+        if (cancelled) return
+        await import('./LandingPageBelowFold')
+        if (cancelled) return
+        handlers.onLibraryReady?.()
+        return
+      }
+
+      await delay(stepDelay)
+      if (cancelled) return
+      await prefetchAuthModal()
+      if (cancelled) return
+      handlers.onAuthReady?.()
+
+      await delay(stepDelay)
+      if (cancelled) return
+      await prefetchLandingLibrarySection()
+      if (cancelled) return
+      handlers.onLibraryReady?.()
+    },
+    idleTimeout,
+  )
 
   return () => {
     cancelled = true

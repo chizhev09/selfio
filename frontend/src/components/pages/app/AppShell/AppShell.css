@@ -1,5 +1,4 @@
 /* Оболочка /app: total black (#000), включая низ и safe-area; main прозрачный — без второго слоя цвета по бокам. */
-@import url("https://fonts.googleapis.com/css2?family=Great+Vibes&family=Jost:wght@500;600;700&display=swap");
 
 .app-shell {
   box-sizing: border-box;
