@@ -9,8 +9,42 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     emptyOutDir: true,
-    /* Основной бандл ~600kB — выше дефолтных 500kB Vite; не спамить предупреждением при npm run build. */
     chunkSizeWarningLimit: 900,
+    /* Не предзагружать framer-motion на лендинге — он нужен только в /app. */
+    modulePreload: {
+      resolveDependencies(_filename, deps) {
+        return deps.filter((dep) => !dep.includes('vendor-motion'))
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return undefined
+          }
+          /* JSX-runtime должен жить с React, иначе лендинг тянет framer-motion (~125 kB) на первом экране. */
+          if (
+            id.includes('react/jsx-runtime') ||
+            id.includes('react-jsx-runtime') ||
+            id.includes('react/jsx-dev-runtime')
+          ) {
+            return 'vendor-react'
+          }
+          if (id.includes('framer-motion')) {
+            return 'vendor-motion'
+          }
+          if (id.includes('react-router') || id.includes('react-dom') || /[/\\]react[/\\]/.test(id)) {
+            return 'vendor-react'
+          }
+          if (id.includes('lucide-react')) {
+            return 'vendor-icons'
+          }
+          if (id.includes('axios')) {
+            return 'vendor-axios'
+          }
+        },
+      },
+    },
   },
   server: {
     proxy: {

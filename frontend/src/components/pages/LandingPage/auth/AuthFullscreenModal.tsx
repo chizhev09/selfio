@@ -6,7 +6,7 @@ import { X } from 'lucide-react'
 import googleLogo from '../Media/logo/google_logo.svg'
 import vkLogo from '../Media/logo/vk_logo.svg'
 import yandexLogo from '../Media/logo/yandex_logo.svg'
-import { authHeroCollagePool } from './authHeroCollageMedia'
+import { loadAuthHeroCollagePool } from './authHeroCollageMedia'
 import './AuthFullscreenModal.css'
 
 const COLLAGE_TILE_COUNT = 5
@@ -53,8 +53,20 @@ function AuthFullscreenModal({ onClose }: AuthFullscreenModalProps) {
   const consentId = useId()
   const consentBoxRef = useRef<HTMLDivElement>(null)
   const consentInputRef = useRef<HTMLInputElement>(null)
-  const [collageUrls] = useState(() => pickCollageUrls(authHeroCollagePool, COLLAGE_TILE_COUNT))
+  const [collageUrls, setCollageUrls] = useState<string[]>([])
   useBodyScrollLock()
+
+  useEffect(() => {
+    let cancelled = false
+    void loadAuthHeroCollagePool().then((pool) => {
+      if (!cancelled) {
+        setCollageUrls(pickCollageUrls(pool, COLLAGE_TILE_COUNT))
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

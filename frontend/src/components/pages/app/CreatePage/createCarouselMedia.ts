@@ -1,4 +1,8 @@
-// Картинки для карусели «Создать»: все файлы из папки Media (jpg/png/webp и т.д.).
+// Картинки для карусели «Создать»: webp из папки Media.
+const carouselImageModules = import.meta.glob<string>('./Media/*.webp', {
+  eager: true,
+  import: 'default',
+})
 
 let cachedCarouselUrls: string[] | null = null
 
@@ -7,14 +11,11 @@ export function getCreateCarouselPhotoUrls(): string[] {
   if (cachedCarouselUrls) {
     return cachedCarouselUrls
   }
-  const modules = import.meta.glob('./Media/**/*.{jpg,jpeg,png,webp,gif}', {
-    eager: true,
-    import: 'default',
-  }) as Record<string, string>
 
-  cachedCarouselUrls = Object.keys(modules)
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
-    .map((path) => modules[path])
+  cachedCarouselUrls = Object.entries(carouselImageModules)
+    .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+    .map(([, url]) => url)
+
   return cachedCarouselUrls
 }
 

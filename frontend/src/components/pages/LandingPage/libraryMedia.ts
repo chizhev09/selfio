@@ -1,8 +1,13 @@
-// Общие данные для коллажей из папки Media/library: glob картинок, сортировка по номеру в имени, сборка коллажей по таблице.
-const libraryImageModules = import.meta.glob<{ default: string }>(
-  './Media/library/*.{jpg,jpeg,png,webp}',
-  { eager: true }
-)
+// Коллажи библиотеки на лендинге: lazy-glob, чтобы не тянуть все превью в первый чанк.
+import type { LibraryCollageSpec } from './libraryMediaTypes'
+
+export type { LibraryCollageSpec } from './libraryMediaTypes'
+export { libraryCollageSpecs } from './libraryMediaTypes'
+
+const libraryImageModules = import.meta.glob<{ default: string }>('./Media/Library/*.{jpg,jpeg,png,webp}')
+
+let cachedByNum: Map<number, string> | null = null
+let loadPromise: Promise<Map<number, string>> | null = null
 
 /** Достаёт имя файла из пути (последний сегмент после слэшей). */
 function libraryBasename(path: string): string {
@@ -16,40 +21,37 @@ function libraryFileOrder(path: string): number {
   return m ? parseInt(m[1], 10) : 0
 }
 
-/** Собирает карту «номер в имени файла → URL»; при совпадении номеров побеждает последний путь. */
-export function libraryUrlByNumber(): Map<number, string> {
-  const map = new Map<number, string>()
-  for (const [path, mod] of Object.entries(libraryImageModules)) {
-    const n = libraryFileOrder(path)
-    if (n > 0) {
-      map.set(n, mod.default)
-    }
+/** Подгружает карту «номер в имени → URL» один раз за сессию. */
+export function loadLibraryUrlByNumber(): Promise<Map<number, string>> {
+  if (cachedByNum) {
+    return Promise.resolve(cachedByNum)
   }
-  return map
+  if (!loadPromise) {
+    loadPromise = (async () => {
+      const map = new Map<number, string>()
+      const entries = await Promise.all(
+        Object.entries(libraryImageModules).map(async ([path, loader]) => {
+          const mod = await loader()
+          return [path, mod.default] as const
+        }),
+      )
+      for (const [path, url] of entries) {
+        const n = libraryFileOrder(path)
+        if (n > 0) {
+          map.set(n, url)
+        }
+      }
+      cachedByNum = map
+      return map
+    })()
+  }
+  return loadPromise
 }
-
-export type LibraryCollageSpec = {
-  readonly caption: string
-  readonly photoNums: readonly [number, number, number]
-}
-
-/**
- * Шесть коллажей для лендинга: подпись и три номера снимка.
- * Меняйте photoNums, если файлы не совпадают с темой.
- */
-export const libraryCollageSpecs: readonly LibraryCollageSpec[] = [
-  { caption: 'Фото на документы', photoNums: [1, 2, 3] },
-  { caption: 'Семейная фотосессия', photoNums: [4, 5, 6] },
-  { caption: 'Деловой портрет', photoNums: [7, 8, 9] },
-  { caption: 'Романтика и пара', photoNums: [10, 11, 12] },
-  { caption: 'Образ для соцсетей', photoNums: [13, 14, 15] },
-  { caption: 'Художественный портрет', photoNums: [16, 17, 18] },
-] as const
 
 /** Собирает только полные коллажи из трёх найденных по номерам URL. */
 export function buildLibraryCollagesFromSpecs(
   byNum: Map<number, string>,
-  specs: readonly LibraryCollageSpec[]
+  specs: readonly LibraryCollageSpec[],
 ): { photos: string[]; caption: string }[] {
   const out: { photos: string[]; caption: string }[] = []
   for (const spec of specs) {

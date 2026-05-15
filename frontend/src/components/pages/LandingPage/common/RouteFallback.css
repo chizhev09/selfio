@@ -1,0 +1,23 @@
+/* Лёгкий полноэкранный индикатор ожидания ленивого чанка. */
+.route-fallback {
+  display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  background: #121212;
+}
+
+.route-fallback__spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-top-color: rgba(192, 132, 252, 0.85);
+  border-radius: 50%;
+  animation: route-fallback-spin 0.7s linear infinite;
+}
+
+@keyframes route-fallback-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
