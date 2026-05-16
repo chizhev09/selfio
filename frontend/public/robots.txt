@@ -1,0 +1,5 @@
+# Правила для поисковых роботов; файл из public попадает в корень сайта при npm run build.
+User-agent: *
+Disallow: /api/
+Disallow: /app/
+Disallow: /admin/

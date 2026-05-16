@@ -10,10 +10,17 @@ export default defineConfig({
     outDir: '../dist',
     emptyOutDir: true,
     chunkSizeWarningLimit: 900,
-    /* Не предзагружать framer-motion на лендинге — он нужен только в /app. */
+    /* На узком LTE десятки параллельных modulepreload (каждый webp → отдельный чанк) подавляют канал и дают белый экран.
+       Предзагружаем только то, без чего не стартует лендинг; остальное подтянется цепочкой после выполнения entry. */
     modulePreload: {
       resolveDependencies(_filename, deps) {
-        return deps.filter((dep) => !dep.includes('vendor-motion'))
+        return deps.filter(
+          (dep) =>
+            dep.includes('rolldown-runtime') ||
+            dep.includes('vendor-react') ||
+            dep.includes('vendor-icons') ||
+            (dep.includes('index-') && dep.endsWith('.js')),
+        )
       },
     },
     rollupOptions: {

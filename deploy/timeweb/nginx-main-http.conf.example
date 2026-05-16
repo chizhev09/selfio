@@ -1,0 +1,45 @@
+# Полный пример главного конфига /etc/nginx/nginx.conf для Debian/Ubuntu.
+# Заменяет только системный nginx.conf; виртуальные хосты (Selfio) лежат отдельно в sites-available.
+# После копирования: sudo nginx -t && sudo systemctl reload nginx
+#
+# ВАЖНО: блоков server здесь нет — только общие настройки и include сайтов из sites-enabled/.
+
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+error_log /var/log/nginx/error.log;
+# Если каталога нет и nginx -t падает — закомментируйте следующую строку.
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections 768;
+}
+
+http {
+    sendfile on;
+    tcp_nopush on;
+    types_hash_max_size 2048;
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    access_log /var/log/nginx/access.log;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 256;
+    gzip_comp_level 5;
+    gzip_types
+        text/plain
+        text/css
+        application/javascript
+        application/json
+        image/svg+xml
+        font/woff2;
+
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+}
